@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>抽卡</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1a;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:sans-serif;padding:16px}
+.c{background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:28px;padding:24px 20px 30px;width:100%;max-width:420px}
+.w{background:rgba(255,255,255,.03);border-radius:20px;padding:30px 20px;min-height:160px;text-align:center}
+.w .word{font-size:44px;font-weight:700;color:#f0f0f0}
+.w .mean{font-size:20px;color:#8892b0;margin-top:12px;min-height:30px;opacity:0}
+.w .mean.show{opacity:1}
+.btns{display:flex;gap:10px;margin-top:16px}
+.btns button{flex:1;border:none;border-radius:50px;padding:14px;font-size:16px;font-weight:600;color:#fff;cursor:pointer}
+.b1{background:#e94560}
+.b2{background:#2a3a5e}
+.add{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.add input{flex:1;min-width:120px;padding:12px 16px;border-radius:12px;border:1px solid #2a3a5e;background:#0f0f1a;color:#e0e0e0;font-size:16px;outline:none}
+.add button{background:#1a7a5a;border:none;border-radius:50px;padding:12px 20px;font-size:16px;font-weight:600;color:#fff;cursor:pointer}
+.list{margin-top:14px;max-height:180px;overflow-y:auto}
+.item{display:flex;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:6px;border-left:3px solid #e94560}
+.item .en{color:#f0f0f0;font-weight:500}
+.item .zh{color:#8892b0;font-size:14px;margin-left:10px}
+.item .del{background:none;border:none;color:#b3384a;font-size:20px;cursor:pointer}
+.cnt{color:#5a6a8a;font-size:13px;text-align:center;margin-top:12px}
+.hint{color:#3a4a6a;font-size:12px;text-align:center;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="c">
+<div class="w"><div class="word" id="w">🎲</div><div class="mean" id="m">点抽开始</div></div>
+<div class="btns"><button class="b1" onclick="d()">🎲抽</button><button class="b2" onclick="s()">👁释义</button></div>
+<div class="add"><input id="wi" placeholder="英文"><input id="mi" placeholder="释义"><button onclick="a()">➕</button></div>
+<div class="list" id="list"></div>
+<div class="cnt" id="cnt">共0个词</div>
+<div class="hint">点✕删除·数据存本机</div>
+</div>
+<script>
+const KEY='wl';
+const DEF=[{w:'apple',m:'苹果'},{w:'book',m:'书'},{w:'cat',m:'猫'},{w:'dog',m:'狗'},{w:'elephant',m:'大象'}];
+function L(){const r=localStorage.getItem(KEY);if(r){try{const p=JSON.parse(r);if(p.length>0)return p}catch(e){}}localStorage.setItem(KEY,JSON.stringify(DEF));return DEF}
+function S(v){localStorage.setItem(KEY,JSON.stringify(v))}
+let words=L(),cur=null,cnt=0;
+const we=document.getElementById('w'),me=document.getElementById('m'),list=document.getElementById('list'),ce=document.getElementById('cnt'),wi=document.getElementById('wi'),mi=document.getElementById('mi');
+function d(){if(!words.length){we.textContent='⚠️空';me.textContent='请添加';me.className='mean';cur=null;return}const i=Math.floor(Math.random()*words.length);cur=words[i];we.textContent=cur.w;me.textContent=cur.m;me.className='mean';cnt++;we.style.transition='none';we.style.opacity='0.6';setTimeout(()=>{we.style.transition='opacity 0.15s';we.style.opacity='1'},10)}
+function s(){if(cur){me.className='mean show'}else{d();setTimeout(()=>{me.className='mean show'},200)}}
+function a(){const w=wi.value.trim(),m=mi.value.trim();if(!w||!m)return alert('请输入');if(words.some(x=>x.w.toLowerCase()===w.toLowerCase()))return alert('已存在');words.push({w,m});S(words);wi.value='';mi.value='';r();u();d()}
+function del(i){if(confirm('删除"'+words[i].w+'"?')){words.splice(i,1);S(words);r();u();if(words.length)d();else{we.textContent='📭';me.textContent='添加新词';me.className='mean';cur=null}}}
+function r(){if(!words.length){list.innerHTML='<div style="color:#4a5a7a;text-align:center;padding:16px;font-size:14px">添加一些词</div>';return}let h='';words.forEach((x,i)=>{h+=`<div class="item"><span><span class="en">${x.w}</span><span class="zh">${x.m}</span></span><button class="del" onclick="del(${i})">✕</button></div>`});list.innerHTML=h}
+function u(){ce.textContent=`共${words.length}个词·已抽${cnt}次`}
+r();u();d();
+wi.addEventListener('keydown',e=>{if(e.key==='Enter')mi.focus()});
+mi.addEventListener('keydown',e=>{if(e.key==='Enter')a()});
+</script>
+</body>
+</html>
