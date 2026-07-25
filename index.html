@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>五色词库 · 猎手版</title>
+    <title>五色词库 · 纯黑版</title>
     <style>
         * {
             margin: 0;
@@ -15,28 +15,26 @@
         html, body {
             width: 100%;
             min-height: 100vh;
-            background: #0f0f1a;
+            background: #0a0a0a;
             font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 12px;
-            transition: background 0.5s ease;
             touch-action: none;
         }
         .app {
             width: 100%;
             max-width: 420px;
-            background: #1a1a2e;
+            background: #1a1a1a;
             border-radius: 32px;
             padding: 24px 20px 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            transition: background 0.5s ease, box-shadow 0.5s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            transition: box-shadow 0.3s ease;
             touch-action: manipulation;
             position: relative;
             overflow: hidden;
         }
-        /* 顶部词库名称 + 指示点 */
         .header {
             display: flex;
             justify-content: space-between;
@@ -49,9 +47,9 @@
             font-weight: 700;
             color: #f0f0f0;
             letter-spacing: 0.5px;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
+            transition: color 0.3s ease;
         }
         .dots {
             display: flex;
@@ -68,17 +66,15 @@
         .dot.active {
             background: #e94560;
             transform: scale(1.25);
-            transition: background 0.4s ease;
         }
-        /* 卡片 */
         .card {
-            background: rgba(255,255,255,0.04);
+            background: #222;
             border-radius: 24px;
             padding: 30px 16px 24px;
             min-height: 170px;
             text-align: center;
             border: 1px solid rgba(255,255,255,0.06);
-            transition: background 0.5s ease, border 0.5s ease;
+            transition: border 0.3s ease;
             touch-action: manipulation;
             cursor: pointer;
         }
@@ -86,7 +82,6 @@
             font-size: 42px;
             font-weight: 700;
             color: #f0f0f0;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -96,14 +91,13 @@
             margin-top: 12px;
             min-height: 30px;
             opacity: 0;
-            transition: opacity 0.3s ease, color 0.4s ease;
+            transition: opacity 0.3s ease, color 0.3s ease;
             user-select: none;
             -webkit-user-select: none;
         }
         .meaning.show {
             opacity: 1;
         }
-        /* 按钮组 */
         .btn-group {
             display: flex;
             gap: 10px;
@@ -119,7 +113,7 @@
             font-weight: 600;
             color: #fff;
             cursor: pointer;
-            transition: background 0.4s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            transition: background 0.3s ease, transform 0.1s ease;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
@@ -149,11 +143,11 @@
             padding: 12px 14px;
             border-radius: 14px;
             border: 1px solid #2a3a5e;
-            background: rgba(0,0,0,0.3);
+            background: #111;
             color: #e0e0e0;
             font-size: 15px;
             outline: none;
-            transition: border 0.3s ease, background 0.4s ease;
+            transition: border 0.3s ease;
             touch-action: manipulation;
         }
         .add-area input:focus {
@@ -174,13 +168,12 @@
             border-radius: 12px;
             margin-bottom: 6px;
             border-left: 4px solid #e94560;
-            transition: background 0.4s ease, border 0.4s ease;
+            transition: border 0.3s ease;
             touch-action: manipulation;
         }
         .list-item .w {
             color: #f0f0f0;
             font-weight: 500;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -188,7 +181,6 @@
             color: #8892b0;
             font-size: 14px;
             margin-left: 10px;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -206,7 +198,6 @@
             font-size: 13px;
             text-align: center;
             margin-top: 14px;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -215,11 +206,9 @@
             font-size: 12px;
             text-align: center;
             margin-top: 4px;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
         }
-        /* 滚动条美化 */
         .list-area::-webkit-scrollbar {
             width: 4px;
         }
@@ -230,14 +219,12 @@
             background: #3a3a5a;
             border-radius: 10px;
         }
-        /* 手势提示 */
         .swipe-hint {
             text-align: center;
             font-size: 13px;
             color: #4a4a6a;
             margin-top: 8px;
             letter-spacing: 0.3px;
-            transition: color 0.4s ease;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -275,80 +262,14 @@
 
 <script>
 (function() {
-    // ============================================================
-    // 1. 词库配置（五个独立词库，每个都有自己的配色）
-    // ============================================================
     const LIBRARIES = [
-        {
-            id: 'hunter',
-            name: '猎兽黑红',
-            bg: '#0f0f1a',
-            cardBg: '#1a1a2e',
-            accent: '#e94560',
-            text: '#f0f0f0',
-            subText: '#8892b0',
-            border: '#e94560',
-            btnPrimary: '#e94560',
-            btnSecondary: '#2a3a5e',
-            words: []
-        },
-        {
-            id: 'sunset',
-            name: '夕彩赤黄',
-            bg: '#1c1917',
-            cardBg: '#2a1f1a',
-            accent: '#f59e0b',
-            text: '#f5e6d0',
-            subText: '#b8a090',
-            border: '#f59e0b',
-            btnPrimary: '#f59e0b',
-            btnSecondary: '#3a2a1a',
-            words: []
-        },
-        {
-            id: 'forest',
-            name: '荫萌翠绿',
-            bg: '#0f1a12',
-            cardBg: '#142a1a',
-            accent: '#10b981',
-            text: '#d0e8d0',
-            subText: '#8aaa8a',
-            border: '#10b981',
-            btnPrimary: '#10b981',
-            btnSecondary: '#1a2a1a',
-            words: []
-        },
-        {
-            id: 'sky',
-            name: '碧空蔚蓝',
-            bg: '#0f172a',
-            cardBg: '#1a2744',
-            accent: '#3b82f6',
-            text: '#d0e0f0',
-            subText: '#8aaaC0',
-            border: '#3b82f6',
-            btnPrimary: '#3b82f6',
-            btnSecondary: '#1a2a4a',
-            words: []
-        },
-        {
-            id: 'violet',
-            name: '罗兰紫色',
-            bg: '#1a1025',
-            cardBg: '#2a1a3a',
-            accent: '#a855f7',
-            text: '#e8d0f0',
-            subText: '#b090c0',
-            border: '#a855f7',
-            btnPrimary: '#a855f7',
-            btnSecondary: '#2a1a3a',
-            words: []
-        }
+        { id: 'hunter', name: '猎兽黑红', accent: '#e94560' },
+        { id: 'sunset', name: '夕彩赤黄', accent: '#f59e0b' },
+        { id: 'forest', name: '荫萌翠绿', accent: '#10b981' },
+        { id: 'sky', name: '碧空蔚蓝', accent: '#3b82f6' },
+        { id: 'violet', name: '罗兰紫色', accent: '#a855f7' }
     ];
 
-    // ============================================================
-    // 2. 存储管理
-    // ============================================================
     const STORAGE_KEY = 'five_libraries_data';
 
     function loadAllData() {
@@ -357,55 +278,37 @@
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length === LIBRARIES.length) {
-                    // 合并保存的数据与默认配置（保证结构一致）
                     return LIBRARIES.map((lib, idx) => {
                         const saved = parsed[idx] || {};
-                        return {
-                            ...lib,
-                            words: Array.isArray(saved.words) ? saved.words : []
-                        };
+                        return { ...lib, words: Array.isArray(saved.words) ? saved.words : [] };
                     });
                 }
             }
         } catch (_) {}
-        // 首次使用：用默认配置，每个词库预置几个示例词
-        return LIBRARIES.map((lib, idx) => {
-            const defaultWords = [
+        return LIBRARIES.map((lib, idx) => ({
+            ...lib,
+            words: idx === 0 ? [
+                { word: 'apple', meaning: '苹果' },
+                { word: 'book', meaning: '书' },
+                { word: 'cat', meaning: '猫' }
+            ] : [
                 { word: 'sample', meaning: '示例' },
                 { word: 'test', meaning: '测试' }
-            ];
-            return {
-                ...lib,
-                words: idx === 0 ? [
-                    { word: 'apple', meaning: '苹果' },
-                    { word: 'book', meaning: '书' },
-                    { word: 'cat', meaning: '猫' }
-                ] : defaultWords.slice()
-            };
-        });
+            ]
+        }));
     }
 
     function saveAllData(libs) {
-        const toSave = libs.map(lib => ({
-            id: lib.id,
-            name: lib.name,
-            words: lib.words || []
-        }));
+        const toSave = libs.map(lib => ({ id: lib.id, name: lib.name, words: lib.words || [] }));
         localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     }
 
-    // ============================================================
-    // 3. 状态
-    // ============================================================
     let libraries = loadAllData();
-    let currentIndex = 0;          // 当前词库索引
-    let currentWord = null;        // 当前显示的词对象
-    let drawCount = 0;            // 当前词库抽卡次数
-    let lastDrawnIndex = -1;      // 上次抽到的索引（避免连续重复）
+    let currentIndex = 0;
+    let currentWord = null;
+    let drawCount = 0;
+    let lastDrawnIndex = -1;
 
-    // ============================================================
-    // 4. DOM 引用
-    // ============================================================
     const app = document.getElementById('app');
     const libName = document.getElementById('libName');
     const dots = document.getElementById('dots');
@@ -418,42 +321,25 @@
     const meaningInput = document.getElementById('meaningInput');
     const swipeHint = document.getElementById('swipeHint');
 
-    // ============================================================
-    // 5. 核心函数
-    // ============================================================
     function getCurrentLib() {
         return libraries[currentIndex] || libraries[0];
     }
 
     function applyTheme(lib) {
-        // 背景
-        document.body.style.background = lib.bg;
-        document.body.style.transition = 'background 0.5s ease';
-        // 卡片容器
-        app.style.background = lib.cardBg;
-        app.style.transition = 'background 0.5s ease, box-shadow 0.5s ease';
-        // 词库名
-        libName.style.color = lib.text;
-        // 卡片
-        cardArea.style.background = 'rgba(255,255,255,0.04)';
-        cardArea.style.border = '1px solid ' + lib.accent + '44';
-        // 文字
-        wordEl.style.color = lib.text;
-        meaningEl.style.color = lib.subText;
-        // 按钮
-        document.querySelector('.btn-primary').style.background = lib.btnPrimary;
-        document.querySelector('.btn-secondary').style.background = lib.btnSecondary;
-        // 列表项左边框
+        const accent = lib.accent;
+        libName.style.color = '#f0f0f0';
+        cardArea.style.border = '1px solid ' + accent + '44';
+        document.querySelector('.btn-primary').style.background = accent;
         document.querySelectorAll('.list-item').forEach(el => {
-            el.style.borderLeftColor = lib.accent;
+            el.style.borderLeftColor = accent;
         });
-        // 底部文字
-        document.querySelector('.hint').style.color = lib.subText + '88';
-        document.querySelector('.swipe-hint').style.color = lib.subText + '66';
-        // 指示点
         document.querySelectorAll('.dot').forEach((dot, i) => {
-            dot.style.background = i === currentIndex ? lib.accent : '#3a3a5a';
+            dot.style.background = i === currentIndex ? accent : '#3a3a5a';
         });
+        libName.textContent = lib.name;
+        swipeHint.textContent = (currentIndex === 0) ? '→ 滑动切换' :
+                                (currentIndex === libraries.length - 1) ? '← 滑动切换' :
+                                '← 滑动切换 →';
     }
 
     function renderDots() {
@@ -462,13 +348,10 @@
             html += `<div class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></div>`;
         });
         dots.innerHTML = html;
-        // 点击dot跳转
         document.querySelectorAll('.dot').forEach(dot => {
             dot.addEventListener('click', function() {
                 const idx = parseInt(this.getAttribute('data-index'), 10);
-                if (!isNaN(idx) && idx !== currentIndex) {
-                    goToLibrary(idx);
-                }
+                if (!isNaN(idx) && idx !== currentIndex) goToLibrary(idx);
             });
         });
     }
@@ -479,21 +362,12 @@
         const lib = getCurrentLib();
         applyTheme(lib);
         renderDots();
-        libName.textContent = lib.name;
-        // 重置当前卡片显示
         currentWord = null;
         drawCount = 0;
         renderList();
         updateCounter();
         drawCard();
-        // 更新滑动提示
-        swipeHint.textContent = (currentIndex === 0) ? '→ 滑动切换' :
-                                (currentIndex === libraries.length - 1) ? '← 滑动切换' :
-                                '← 滑动切换 →';
-        // 保存当前词库索引到localStorage（可选）
-        try {
-            localStorage.setItem('current_lib_index', String(currentIndex));
-        } catch (_) {}
+        try { localStorage.setItem('current_lib_index', String(currentIndex)); } catch (_) {}
     }
 
     function drawCard() {
@@ -506,12 +380,10 @@
             currentWord = null;
             return;
         }
-        // 避免连续重复：如果词库只有1个词，直接抽它
         let idx;
         if (words.length === 1) {
             idx = 0;
         } else {
-            // 随机选一个，但不能和上次一样
             let attempts = 0;
             do {
                 idx = Math.floor(Math.random() * words.length);
@@ -525,7 +397,6 @@
         meaningEl.className = 'meaning';
         drawCount++;
         updateCounter();
-        // 闪动反馈
         wordEl.style.transition = 'none';
         wordEl.style.opacity = '0.6';
         setTimeout(() => {
@@ -546,10 +417,7 @@
     function addWord() {
         const w = wordInput.value.trim();
         const m = meaningInput.value.trim();
-        if (!w || !m) {
-            alert('请输入英文和释义');
-            return;
-        }
+        if (!w || !m) { alert('请输入英文和释义'); return; }
         const lib = getCurrentLib();
         if (lib.words.some(item => item.word.toLowerCase() === w.toLowerCase())) {
             alert('这个词已存在');
@@ -618,18 +486,12 @@
         return div.innerHTML;
     }
 
-    // ============================================================
-    // 6. 手势控制（左右滑动）
-    // ============================================================
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isSwiping = false;
-
+    // 手势滑动
+    let touchStartX = 0, touchStartY = 0;
     app.addEventListener('touchstart', function(e) {
         const touch = e.touches[0];
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
-        isSwiping = false;
     }, { passive: true });
 
     app.addEventListener('touchmove', function(e) {
@@ -638,7 +500,6 @@
         const deltaX = touch.clientX - touchStartX;
         const deltaY = touch.clientY - touchStartY;
         if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
-            isSwiping = true;
             e.preventDefault();
             if (deltaX < -40 && currentIndex < libraries.length - 1) {
                 goToLibrary(currentIndex + 1);
@@ -650,9 +511,7 @@
         }
     }, { passive: false });
 
-    // ============================================================
-    // 7. 拦截缩放
-    // ============================================================
+    // 锁缩放
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
     document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
     document.addEventListener('gestureend', function(e) { e.preventDefault(); });
@@ -661,38 +520,25 @@
         if (e.touches.length > 1) e.preventDefault();
     }, { passive: false });
 
-    // ============================================================
-    // 8. 初始化
-    // ============================================================
     function init() {
-        // 尝试恢复上次词库索引
         try {
             const savedIdx = localStorage.getItem('current_lib_index');
             if (savedIdx !== null) {
                 const idx = parseInt(savedIdx, 10);
-                if (!isNaN(idx) && idx >= 0 && idx < libraries.length) {
-                    currentIndex = idx;
-                }
+                if (!isNaN(idx) && idx >= 0 && idx < libraries.length) currentIndex = idx;
             }
         } catch (_) {}
         renderDots();
         goToLibrary(currentIndex);
-        // 事件绑定
         document.getElementById('drawBtn').addEventListener('click', drawCard);
         document.getElementById('revealBtn').addEventListener('click', revealMeaning);
         document.getElementById('addBtn').addEventListener('click', addWord);
         cardArea.addEventListener('click', revealMeaning);
         wordInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                meaningInput.focus();
-            }
+            if (e.key === 'Enter') { e.preventDefault(); meaningInput.focus(); }
         });
         meaningInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addWord();
-            }
+            if (e.key === 'Enter') { e.preventDefault(); addWord(); }
         });
     }
 
