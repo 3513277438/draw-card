@@ -1,863 +1,703 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>五色词库 · 抽卡</title>
+    <title>五色词库 · 猎手版</title>
     <style>
-        /* ===== 全局重置 & 彻底锁缩放 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
         html, body {
             width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
             background: #0f0f1a;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 12px;
+            transition: background 0.5s ease;
             touch-action: none;
         }
-        /* ===== 容器 ===== */
         .app {
             width: 100%;
             max-width: 420px;
-            height: 100vh;
-            max-height: 780px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            background: #1a1a2e;
             border-radius: 32px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            transition: background 0.4s ease;
-        }
-        /* ===== 词库容器（滑动区） ===== */
-        .deck-wrapper {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-            position: relative;
-            touch-action: pan-y;
-        }
-        .deck-track {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            will-change: transform;
-        }
-        /* ===== 单个词库面板 ===== */
-        .deck-panel {
-            flex: 0 0 100%;
-            height: 100%;
             padding: 24px 20px 30px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: background 0.4s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            transition: background 0.5s ease, box-shadow 0.5s ease;
+            touch-action: manipulation;
             position: relative;
+            overflow: hidden;
         }
-        /* ===== 顶部标题栏 ===== */
-        .deck-header {
+        /* 顶部词库名称 + 指示点 */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 12px;
-            border-bottom: 2px solid rgba(255,255,255,0.06);
             margin-bottom: 16px;
-            flex-shrink: 0;
+            padding: 0 4px;
         }
-        .deck-name {
-            font-size: 22px;
+        .lib-name {
+            font-size: 20px;
             font-weight: 700;
-            letter-spacing: 1px;
-            color: #fff;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            color: #f0f0f0;
+            letter-spacing: 0.5px;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .deck-badge {
-            font-size: 13px;
-            font-weight: 500;
-            padding: 4px 14px;
-            border-radius: 30px;
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.7);
-            backdrop-filter: blur(4px);
-        }
-        /* ===== 卡片区域 ===== */
-        .card-area {
-            flex: 1;
-            background: rgba(0,0,0,0.25);
-            backdrop-filter: blur(8px);
-            border-radius: 28px;
+        .dots {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            min-height: 160px;
-            border: 1px solid rgba(255,255,255,0.06);
+            gap: 8px;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3a3a5a;
+            transition: background 0.3s ease, transform 0.2s ease;
             cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 14px;
+        }
+        .dot.active {
+            background: #e94560;
+            transform: scale(1.25);
+            transition: background 0.4s ease;
+        }
+        /* 卡片 */
+        .card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 24px;
+            padding: 30px 16px 24px;
+            min-height: 170px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.5s ease, border 0.5s ease;
             touch-action: manipulation;
+            cursor: pointer;
         }
-        .card-word {
-            font-size: 48px;
+        .word {
+            font-size: 42px;
             font-weight: 700;
-            color: #fff;
-            text-align: center;
-            line-height: 1.3;
-            word-break: break-word;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            color: #f0f0f0;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .card-meaning {
-            font-size: 22px;
-            font-weight: 400;
-            color: rgba(255,255,255,0.75);
-            margin-top: 10px;
-            min-height: 36px;
+        .meaning {
+            font-size: 20px;
+            color: #8892b0;
+            margin-top: 12px;
+            min-height: 30px;
             opacity: 0;
-            transition: opacity 0.3s ease;
-            text-align: center;
+            transition: opacity 0.3s ease, color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .card-meaning.show {
+        .meaning.show {
             opacity: 1;
         }
-        .card-empty {
-            color: rgba(255,255,255,0.3);
-            font-size: 18px;
-            font-weight: 400;
-        }
-        /* ===== 按钮组 ===== */
+        /* 按钮组 */
         .btn-group {
             display: flex;
-            gap: 12px;
-            margin-bottom: 14px;
-            flex-shrink: 0;
-            touch-action: manipulation;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
         }
         .btn {
             flex: 1;
             border: none;
             border-radius: 60px;
-            padding: 14px 0;
-            font-size: 17px;
+            padding: 14px 16px;
+            font-size: 16px;
             font-weight: 600;
             color: #fff;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: background 0.4s ease, transform 0.1s ease, box-shadow 0.3s ease;
             touch-action: manipulation;
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.06);
+            user-select: none;
+            -webkit-user-select: none;
+            min-width: 80px;
         }
         .btn:active {
-            transform: scale(0.94);
+            transform: scale(0.95);
         }
         .btn-primary {
-            background: var(--accent);
-            border-color: var(--accent);
-            box-shadow: 0 8px 24px var(--accent-shadow);
+            background: #e94560;
         }
         .btn-secondary {
-            background: rgba(255,255,255,0.06);
+            background: #2a3a5e;
         }
-        /* ===== 添加区 ===== */
+        .btn-success {
+            background: #1a7a5a;
+        }
         .add-area {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
-            flex-shrink: 0;
-            touch-action: manipulation;
+            margin-top: 16px;
+            flex-wrap: wrap;
         }
         .add-area input {
             flex: 1;
-            padding: 12px 16px;
-            border-radius: 60px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.35);
-            color: #fff;
+            min-width: 100px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #2a3a5e;
+            background: rgba(0,0,0,0.3);
+            color: #e0e0e0;
             font-size: 15px;
             outline: none;
-            transition: border 0.2s;
+            transition: border 0.3s ease, background 0.4s ease;
             touch-action: manipulation;
-            min-width: 0;
-        }
-        .add-area input::placeholder {
-            color: rgba(255,255,255,0.25);
         }
         .add-area input:focus {
-            border-color: var(--accent);
+            border-color: #e94560;
         }
-        .add-area .btn-add {
-            flex: 0 0 56px;
-            border-radius: 60px;
-            border: none;
-            background: var(--accent);
-            color: #fff;
-            font-size: 24px;
-            font-weight: 300;
-            cursor: pointer;
-            transition: all 0.15s;
-            touch-action: manipulation;
-            box-shadow: 0 8px 24px var(--accent-shadow);
-        }
-        .add-area .btn-add:active {
-            transform: scale(0.92);
-        }
-        /* ===== 词库列表 ===== */
         .list-area {
-            flex: 1;
+            margin-top: 16px;
+            max-height: 170px;
             overflow-y: auto;
-            margin-top: 4px;
-            padding-right: 4px;
-            min-height: 60px;
-            max-height: 160px;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
         }
         .list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 14px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
             margin-bottom: 6px;
-            border-left: 4px solid var(--accent);
+            border-left: 4px solid #e94560;
+            transition: background 0.4s ease, border 0.4s ease;
             touch-action: manipulation;
         }
         .list-item .w {
-            color: #fff;
+            color: #f0f0f0;
             font-weight: 500;
-            font-size: 16px;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .list-item .m {
-            color: rgba(255,255,255,0.55);
+            color: #8892b0;
             font-size: 14px;
             margin-left: 10px;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .list-item .del {
             background: none;
             border: none;
-            color: rgba(255,255,255,0.25);
+            color: #b3384a;
             font-size: 20px;
             cursor: pointer;
             padding: 0 6px;
             touch-action: manipulation;
-            transition: color 0.2s;
         }
-        .list-item .del:active {
-            color: #ff4757;
-        }
-        .list-empty {
-            color: rgba(255,255,255,0.2);
+        .counter {
+            color: #5a6a8a;
+            font-size: 13px;
             text-align: center;
-            padding: 20px 0;
-            font-size: 14px;
+            margin-top: 14px;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        /* ===== 底部指示器 ===== */
-        .indicator {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 12px 0 8px;
-            flex-shrink: 0;
-            touch-action: none;
+        .hint {
+            color: #3a4a6a;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 4px;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            transition: all 0.3s;
-        }
-        .dot.active {
-            background: #fff;
-            transform: scale(1.25);
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-        }
-        /* ===== 滚动条隐藏 ===== */
+        /* 滚动条美化 */
         .list-area::-webkit-scrollbar {
-            width: 3px;
+            width: 4px;
         }
         .list-area::-webkit-scrollbar-track {
             background: transparent;
         }
         .list-area::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
+            background: #3a3a5a;
             border-radius: 10px;
         }
-        /* ===== 动画 ===== */
-        @keyframes fadeSlide {
-            0% { opacity: 0.4; transform: translateY(6px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        .card-area.flash {
-            animation: fadeSlide 0.2s ease;
+        /* 手势提示 */
+        .swipe-hint {
+            text-align: center;
+            font-size: 13px;
+            color: #4a4a6a;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+            transition: color 0.4s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
     </style>
 </head>
 <body>
-
 <div class="app" id="app">
-    <!-- 词库滑动容器 -->
-    <div class="deck-wrapper" id="deckWrapper">
-        <div class="deck-track" id="deckTrack">
-            <!-- 五个词库面板将由 JavaScript 动态生成 -->
-        </div>
+    <div class="header">
+        <div class="lib-name" id="libName">猎兽黑红</div>
+        <div class="dots" id="dots"></div>
     </div>
 
-    <!-- 底部指示器 -->
-    <div class="indicator" id="indicator"></div>
+    <div class="card" id="cardArea">
+        <div class="word" id="wordDisplay">🎲</div>
+        <div class="meaning" id="meaningDisplay">点「抽」开始</div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn btn-primary" id="drawBtn">🎲 抽</button>
+        <button class="btn btn-secondary" id="revealBtn">👁 释义</button>
+    </div>
+
+    <div class="add-area">
+        <input id="wordInput" placeholder="英文" maxlength="50">
+        <input id="meaningInput" placeholder="释义" maxlength="50">
+        <button class="btn btn-success" id="addBtn" style="flex:0.6;min-width:60px">➕</button>
+    </div>
+
+    <div class="list-area" id="listArea"></div>
+
+    <div class="counter" id="counter">共 0 个词 · 已抽 0 次</div>
+    <div class="hint">✕ 删除 · 左右滑动切换词库</div>
+    <div class="swipe-hint" id="swipeHint">← 滑动切换 →</div>
 </div>
 
 <script>
+(function() {
     // ============================================================
-    //  五色词库 · 完整逻辑
-    //  数据独立存储于 localStorage，键名：deck_数据
-    //  滑动切换词库，每个词库独立抽卡、独立加词、独立配色
-    //  彻底禁用缩放，禁用手势
+    // 1. 词库配置（五个独立词库，每个都有自己的配色）
     // ============================================================
-
-    // -------- 词库配置 --------
-    const DECK_CONFIG = [
+    const LIBRARIES = [
         {
-            id: 'deck_0',
+            id: 'hunter',
             name: '猎兽黑红',
-            accent: '#e94560',
             bg: '#0f0f1a',
-            shadow: 'rgba(233,69,96,0.35)',
-            defaultWords: [
-                { word: 'apple', meaning: '苹果' },
-                { word: 'book', meaning: '书' },
-                { word: 'cat', meaning: '猫' },
-                { word: 'dog', meaning: '狗' },
-                { word: 'elephant', meaning: '大象' }
-            ]
+            cardBg: '#1a1a2e',
+            accent: '#e94560',
+            text: '#f0f0f0',
+            subText: '#8892b0',
+            border: '#e94560',
+            btnPrimary: '#e94560',
+            btnSecondary: '#2a3a5e',
+            words: []
         },
         {
-            id: 'deck_1',
+            id: 'sunset',
             name: '夕彩赤黄',
-            accent: '#f59e0b',
             bg: '#1c1917',
-            shadow: 'rgba(245,158,11,0.35)',
-            defaultWords: [
-                { word: 'sunset', meaning: '日落' },
-                { word: 'glow', meaning: '辉光' },
-                { word: 'ember', meaning: '余烬' },
-                { word: 'dusk', meaning: '黄昏' },
-                { word: 'golden', meaning: '金色的' }
-            ]
+            cardBg: '#2a1f1a',
+            accent: '#f59e0b',
+            text: '#f5e6d0',
+            subText: '#b8a090',
+            border: '#f59e0b',
+            btnPrimary: '#f59e0b',
+            btnSecondary: '#3a2a1a',
+            words: []
         },
         {
-            id: 'deck_2',
+            id: 'forest',
             name: '荫萌翠绿',
-            accent: '#10b981',
             bg: '#0f1a12',
-            shadow: 'rgba(16,185,129,0.35)',
-            defaultWords: [
-                { word: 'forest', meaning: '森林' },
-                { word: 'moss', meaning: '苔藓' },
-                { word: 'fern', meaning: '蕨类' },
-                { word: 'shade', meaning: '荫凉' },
-                { word: 'vital', meaning: '生机勃勃的' }
-            ]
+            cardBg: '#142a1a',
+            accent: '#10b981',
+            text: '#d0e8d0',
+            subText: '#8aaa8a',
+            border: '#10b981',
+            btnPrimary: '#10b981',
+            btnSecondary: '#1a2a1a',
+            words: []
         },
         {
-            id: 'deck_3',
+            id: 'sky',
             name: '碧空蔚蓝',
-            accent: '#3b82f6',
             bg: '#0f172a',
-            shadow: 'rgba(59,130,246,0.35)',
-            defaultWords: [
-                { word: 'sky', meaning: '天空' },
-                { word: 'ocean', meaning: '海洋' },
-                { word: 'horizon', meaning: '地平线' },
-                { word: 'breeze', meaning: '微风' },
-                { word: 'azure', meaning: '蔚蓝的' }
-            ]
+            cardBg: '#1a2744',
+            accent: '#3b82f6',
+            text: '#d0e0f0',
+            subText: '#8aaaC0',
+            border: '#3b82f6',
+            btnPrimary: '#3b82f6',
+            btnSecondary: '#1a2a4a',
+            words: []
         },
         {
-            id: 'deck_4',
+            id: 'violet',
             name: '罗兰紫色',
-            accent: '#a855f7',
             bg: '#1a1025',
-            shadow: 'rgba(168,85,247,0.35)',
-            defaultWords: [
-                { word: 'violet', meaning: '紫罗兰' },
-                { word: 'twilight', meaning: '暮光' },
-                { word: 'mystic', meaning: '神秘的' },
-                { word: 'dream', meaning: '梦境' },
-                { word: 'royal', meaning: '高贵的' }
-            ]
+            cardBg: '#2a1a3a',
+            accent: '#a855f7',
+            text: '#e8d0f0',
+            subText: '#b090c0',
+            border: '#a855f7',
+            btnPrimary: '#a855f7',
+            btnSecondary: '#2a1a3a',
+            words: []
         }
     ];
 
-    // -------- 工具函数 --------
-    function getStorageKey(deckId) {
-        return 'five_deck_' + deckId;
-    }
+    // ============================================================
+    // 2. 存储管理
+    // ============================================================
+    const STORAGE_KEY = 'five_libraries_data';
 
-    function loadDeckData(deckId, defaultWords) {
-        const key = getStorageKey(deckId);
+    function loadAllData() {
         try {
-            const raw = localStorage.getItem(key);
+            const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    return parsed;
+                if (Array.isArray(parsed) && parsed.length === LIBRARIES.length) {
+                    // 合并保存的数据与默认配置（保证结构一致）
+                    return LIBRARIES.map((lib, idx) => {
+                        const saved = parsed[idx] || {};
+                        return {
+                            ...lib,
+                            words: Array.isArray(saved.words) ? saved.words : []
+                        };
+                    });
                 }
             }
-        } catch (e) {}
-        // 首次使用写入默认词库
-        localStorage.setItem(key, JSON.stringify(defaultWords));
-        return defaultWords.slice();
-    }
-
-    function saveDeckData(deckId, words) {
-        const key = getStorageKey(deckId);
-        localStorage.setItem(key, JSON.stringify(words));
-    }
-
-    function esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
-
-    // -------- 状态 --------
-    let currentIndex = 0;           // 当前词库索引
-    let deckStates = [];            // 每个词库的状态 { words, lastIndex, drawCount }
-    let touchStartX = 0;
-    let touchCurrentX = 0;
-    let isDragging = false;
-    let isSwiping = false;
-
-    // -------- DOM 引用 --------
-    const track = document.getElementById('deckTrack');
-    const indicator = document.getElementById('indicator');
-    const wrapper = document.getElementById('deckWrapper');
-
-    // -------- 初始化词库状态 --------
-    function initDecks() {
-        deckStates = DECK_CONFIG.map((cfg) => {
-            const words = loadDeckData(cfg.id, cfg.defaultWords);
+        } catch (_) {}
+        // 首次使用：用默认配置，每个词库预置几个示例词
+        return LIBRARIES.map((lib, idx) => {
+            const defaultWords = [
+                { word: 'sample', meaning: '示例' },
+                { word: 'test', meaning: '测试' }
+            ];
             return {
-                words: words,
-                lastIndex: -1,
-                drawCount: 0
+                ...lib,
+                words: idx === 0 ? [
+                    { word: 'apple', meaning: '苹果' },
+                    { word: 'book', meaning: '书' },
+                    { word: 'cat', meaning: '猫' }
+                ] : defaultWords.slice()
             };
         });
     }
 
-    // -------- 渲染所有词库面板 --------
-    function renderDecks() {
-        track.innerHTML = '';
-        DECK_CONFIG.forEach((cfg, idx) => {
-            const panel = document.createElement('div');
-            panel.className = 'deck-panel';
-            panel.dataset.index = idx;
-            panel.style.background = cfg.bg;
+    function saveAllData(libs) {
+        const toSave = libs.map(lib => ({
+            id: lib.id,
+            name: lib.name,
+            words: lib.words || []
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    }
 
-            // 标题
-            const header = document.createElement('div');
-            header.className = 'deck-header';
-            header.innerHTML = `
-                <span class="deck-name">${esc(cfg.name)}</span>
-                <span class="deck-badge" id="badge_${idx}">0 词</span>
-            `;
-            panel.appendChild(header);
+    // ============================================================
+    // 3. 状态
+    // ============================================================
+    let libraries = loadAllData();
+    let currentIndex = 0;          // 当前词库索引
+    let currentWord = null;        // 当前显示的词对象
+    let drawCount = 0;            // 当前词库抽卡次数
+    let lastDrawnIndex = -1;      // 上次抽到的索引（避免连续重复）
 
-            // 卡片
-            const card = document.createElement('div');
-            card.className = 'card-area';
-            card.dataset.deckIndex = idx;
-            card.id = `card_${idx}`;
-            card.innerHTML = `
-                <div class="card-word" id="word_${idx}">🎲</div>
-                <div class="card-meaning" id="meaning_${idx}">点「抽」开始</div>
-            `;
-            panel.appendChild(card);
+    // ============================================================
+    // 4. DOM 引用
+    // ============================================================
+    const app = document.getElementById('app');
+    const libName = document.getElementById('libName');
+    const dots = document.getElementById('dots');
+    const cardArea = document.getElementById('cardArea');
+    const wordEl = document.getElementById('wordDisplay');
+    const meaningEl = document.getElementById('meaningDisplay');
+    const listEl = document.getElementById('listArea');
+    const counterEl = document.getElementById('counter');
+    const wordInput = document.getElementById('wordInput');
+    const meaningInput = document.getElementById('meaningInput');
+    const swipeHint = document.getElementById('swipeHint');
 
-            // 按钮
-            const btnGroup = document.createElement('div');
-            btnGroup.className = 'btn-group';
-            btnGroup.innerHTML = `
-                <button class="btn btn-primary" data-deck="${idx}" data-action="draw" style="--accent:${cfg.accent};--accent-shadow:${cfg.shadow}">🎲 抽</button>
-                <button class="btn btn-secondary" data-deck="${idx}" data-action="reveal">👁 释义</button>
-            `;
-            panel.appendChild(btnGroup);
+    // ============================================================
+    // 5. 核心函数
+    // ============================================================
+    function getCurrentLib() {
+        return libraries[currentIndex] || libraries[0];
+    }
 
-            // 添加区
-            const addArea = document.createElement('div');
-            addArea.className = 'add-area';
-            addArea.innerHTML = `
-                <input type="text" placeholder="英文" id="inputWord_${idx}" maxlength="40">
-                <input type="text" placeholder="释义" id="inputMeaning_${idx}" maxlength="40">
-                <button class="btn-add" data-deck="${idx}" data-action="add" style="--accent:${cfg.accent};--accent-shadow:${cfg.shadow}">➕</button>
-            `;
-            panel.appendChild(addArea);
-
-            // 列表
-            const list = document.createElement('div');
-            list.className = 'list-area';
-            list.id = `list_${idx}`;
-            panel.appendChild(list);
-
-            track.appendChild(panel);
+    function applyTheme(lib) {
+        // 背景
+        document.body.style.background = lib.bg;
+        document.body.style.transition = 'background 0.5s ease';
+        // 卡片容器
+        app.style.background = lib.cardBg;
+        app.style.transition = 'background 0.5s ease, box-shadow 0.5s ease';
+        // 词库名
+        libName.style.color = lib.text;
+        // 卡片
+        cardArea.style.background = 'rgba(255,255,255,0.04)';
+        cardArea.style.border = '1px solid ' + lib.accent + '44';
+        // 文字
+        wordEl.style.color = lib.text;
+        meaningEl.style.color = lib.subText;
+        // 按钮
+        document.querySelector('.btn-primary').style.background = lib.btnPrimary;
+        document.querySelector('.btn-secondary').style.background = lib.btnSecondary;
+        // 列表项左边框
+        document.querySelectorAll('.list-item').forEach(el => {
+            el.style.borderLeftColor = lib.accent;
         });
-
-        // 设置 CSS 变量到 app 容器
-        updateAppTheme(0);
-        updateIndicator();
-        updateAllLists();
-        updateAllBadges();
-
-        // 事件绑定 (委托)
-        track.addEventListener('click', function(e) {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            const deckIdx = parseInt(btn.dataset.deck);
-            if (isNaN(deckIdx)) return;
-            const action = btn.dataset.action;
-            if (action === 'draw') {
-                drawCard(deckIdx);
-            } else if (action === 'reveal') {
-                revealMeaning(deckIdx);
-            } else if (action === 'add') {
-                addWord(deckIdx);
-            }
-        });
-
-        // 卡片点击切换释义
-        track.addEventListener('click', function(e) {
-            const card = e.target.closest('.card-area');
-            if (card) {
-                const idx = parseInt(card.dataset.deckIndex);
-                if (!isNaN(idx)) {
-                    revealMeaning(idx);
-                }
-            }
-        });
-
-        // 输入框回车
-        track.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const input = e.target;
-                const deckIdx = parseInt(input.dataset.deckIndex);
-                if (!isNaN(deckIdx)) {
-                    // 如果是第一个输入框，跳到第二个
-                    if (input.id.startsWith('inputWord_')) {
-                        const next = document.getElementById('inputMeaning_' + deckIdx);
-                        if (next) next.focus();
-                    } else if (input.id.startsWith('inputMeaning_')) {
-                        addWord(deckIdx);
-                    }
-                }
-            }
-        });
-
-        // 删除按钮委托
-        track.addEventListener('click', function(e) {
-            const del = e.target.closest('.del');
-            if (del) {
-                const deckIdx = parseInt(del.dataset.deck);
-                const wordIdx = parseInt(del.dataset.word);
-                if (!isNaN(deckIdx) && !isNaN(wordIdx)) {
-                    deleteWord(deckIdx, wordIdx);
-                }
-            }
+        // 底部文字
+        document.querySelector('.hint').style.color = lib.subText + '88';
+        document.querySelector('.swipe-hint').style.color = lib.subText + '66';
+        // 指示点
+        document.querySelectorAll('.dot').forEach((dot, i) => {
+            dot.style.background = i === currentIndex ? lib.accent : '#3a3a5a';
         });
     }
 
-    // -------- 更新主题 --------
-    function updateAppTheme(index) {
-        const cfg = DECK_CONFIG[index];
-        if (!cfg) return;
-        const app = document.getElementById('app');
-        app.style.background = cfg.bg;
-        app.style.setProperty('--accent', cfg.accent);
-        app.style.setProperty('--accent-shadow', cfg.shadow);
-    }
-
-    // -------- 更新指示器 --------
-    function updateIndicator() {
-        indicator.innerHTML = '';
-        DECK_CONFIG.forEach((_, i) => {
-            const dot = document.createElement('span');
-            dot.className = 'dot' + (i === currentIndex ? ' active' : '');
-            indicator.appendChild(dot);
-        });
-    }
-
-    // -------- 更新单个词库列表 --------
-    function renderList(deckIdx) {
-        const state = deckStates[deckIdx];
-        const list = document.getElementById('list_' + deckIdx);
-        if (!list) return;
-        if (!state || state.words.length === 0) {
-            list.innerHTML = '<div class="list-empty">还没有词，添加一些吧</div>';
-            return;
-        }
+    function renderDots() {
         let html = '';
-        state.words.forEach((item, i) => {
-            html += `
-                <div class="list-item">
-                    <span><span class="w">${esc(item.word)}</span><span class="m">${esc(item.meaning)}</span></span>
-                    <button class="del" data-deck="${deckIdx}" data-word="${i}">✕</button>
-                </div>
-            `;
+        libraries.forEach((_, i) => {
+            html += `<div class="dot ${i === currentIndex ? 'active' : ''}" data-index="${i}"></div>`;
         });
-        list.innerHTML = html;
-        // 重新绑定删除事件（委托已做，但这里确保 data 属性正确）
+        dots.innerHTML = html;
+        // 点击dot跳转
+        document.querySelectorAll('.dot').forEach(dot => {
+            dot.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-index'), 10);
+                if (!isNaN(idx) && idx !== currentIndex) {
+                    goToLibrary(idx);
+                }
+            });
+        });
     }
 
-    function updateAllLists() {
-        DECK_CONFIG.forEach((_, i) => renderList(i));
+    function goToLibrary(index) {
+        if (index < 0 || index >= libraries.length) return;
+        currentIndex = index;
+        const lib = getCurrentLib();
+        applyTheme(lib);
+        renderDots();
+        libName.textContent = lib.name;
+        // 重置当前卡片显示
+        currentWord = null;
+        drawCount = 0;
+        renderList();
+        updateCounter();
+        drawCard();
+        // 更新滑动提示
+        swipeHint.textContent = (currentIndex === 0) ? '→ 滑动切换' :
+                                (currentIndex === libraries.length - 1) ? '← 滑动切换' :
+                                '← 滑动切换 →';
+        // 保存当前词库索引到localStorage（可选）
+        try {
+            localStorage.setItem('current_lib_index', String(currentIndex));
+        } catch (_) {}
     }
 
-    // -------- 更新词库数量徽章 --------
-    function updateBadge(deckIdx) {
-        const state = deckStates[deckIdx];
-        const badge = document.getElementById('badge_' + deckIdx);
-        if (badge) {
-            badge.textContent = (state ? state.words.length : 0) + ' 词';
-        }
-    }
-
-    function updateAllBadges() {
-        DECK_CONFIG.forEach((_, i) => updateBadge(i));
-    }
-
-    // -------- 更新计数（可扩展） --------
-    function updateDrawCount(deckIdx) {
-        // 未来可显示在某个位置
-    }
-
-    // -------- 核心抽卡 --------
-    function drawCard(deckIdx) {
-        const state = deckStates[deckIdx];
-        if (!state) return;
-        if (state.words.length === 0) {
-            const wordEl = document.getElementById('word_' + deckIdx);
-            const meaningEl = document.getElementById('meaning_' + deckIdx);
-            if (wordEl) wordEl.textContent = '⚠️ 空';
-            if (meaningEl) {
-                meaningEl.textContent = '请添加词汇';
-                meaningEl.className = 'card-meaning';
-            }
+    function drawCard() {
+        const lib = getCurrentLib();
+        const words = lib.words || [];
+        if (words.length === 0) {
+            wordEl.textContent = '📭';
+            meaningEl.textContent = '词库为空，添加新词吧';
+            meaningEl.className = 'meaning';
+            currentWord = null;
             return;
         }
-
-        // 避免连续抽到同一个词
-        let candidates = [];
-        if (state.lastIndex >= 0 && state.words.length > 1) {
-            candidates = state.words.filter((_, i) => i !== state.lastIndex);
+        // 避免连续重复：如果词库只有1个词，直接抽它
+        let idx;
+        if (words.length === 1) {
+            idx = 0;
         } else {
-            candidates = state.words.slice();
+            // 随机选一个，但不能和上次一样
+            let attempts = 0;
+            do {
+                idx = Math.floor(Math.random() * words.length);
+                attempts++;
+            } while (idx === lastDrawnIndex && attempts < 20);
         }
-
-        const randomIdx = Math.floor(Math.random() * candidates.length);
-        const selectedWord = candidates[randomIdx];
-        // 找到它在原数组中的索引
-        const originalIndex = state.words.indexOf(selectedWord);
-        state.lastIndex = originalIndex;
-        state.drawCount = (state.drawCount || 0) + 1;
-
-        const wordEl = document.getElementById('word_' + deckIdx);
-        const meaningEl = document.getElementById('meaning_' + deckIdx);
-        if (wordEl) wordEl.textContent = selectedWord.word;
-        if (meaningEl) {
-            meaningEl.textContent = selectedWord.meaning;
-            meaningEl.className = 'card-meaning';
-        }
-
-        // 闪动动画
-        const card = document.getElementById('card_' + deckIdx);
-        if (card) {
-            card.classList.remove('flash');
-            void card.offsetWidth;
-            card.classList.add('flash');
-        }
-
-        // 更新计数徽章（虽然没变化，但可保留）
-        updateBadge(deckIdx);
+        lastDrawnIndex = idx;
+        currentWord = words[idx];
+        wordEl.textContent = currentWord.word;
+        meaningEl.textContent = currentWord.meaning;
+        meaningEl.className = 'meaning';
+        drawCount++;
+        updateCounter();
+        // 闪动反馈
+        wordEl.style.transition = 'none';
+        wordEl.style.opacity = '0.6';
+        setTimeout(() => {
+            wordEl.style.transition = 'opacity 0.15s ease';
+            wordEl.style.opacity = '1';
+        }, 10);
     }
 
-    // -------- 显示释义 --------
-    function revealMeaning(deckIdx) {
-        const meaningEl = document.getElementById('meaning_' + deckIdx);
-        if (!meaningEl) return;
-        // 如果当前显示的是"请添加词汇"或空状态，先抽一张
-        if (meaningEl.textContent === '请添加词汇' || meaningEl.textContent === '点「抽」开始') {
-            drawCard(deckIdx);
-            setTimeout(() => {
-                const el = document.getElementById('meaning_' + deckIdx);
-                if (el) el.className = 'card-meaning show';
-            }, 100);
+    function revealMeaning() {
+        if (currentWord) {
+            meaningEl.className = 'meaning show';
         } else {
-            meaningEl.classList.toggle('show');
+            drawCard();
+            setTimeout(() => { meaningEl.className = 'meaning show'; }, 200);
         }
     }
 
-    // -------- 添加单词 --------
-    function addWord(deckIdx) {
-        const wordInput = document.getElementById('inputWord_' + deckIdx);
-        const meaningInput = document.getElementById('inputMeaning_' + deckIdx);
-        if (!wordInput || !meaningInput) return;
+    function addWord() {
         const w = wordInput.value.trim();
         const m = meaningInput.value.trim();
         if (!w || !m) {
             alert('请输入英文和释义');
             return;
         }
-        const state = deckStates[deckIdx];
-        if (!state) return;
-        // 去重检查
-        if (state.words.some(item => item.word.toLowerCase() === w.toLowerCase())) {
+        const lib = getCurrentLib();
+        if (lib.words.some(item => item.word.toLowerCase() === w.toLowerCase())) {
             alert('这个词已存在');
             return;
         }
-        state.words.push({ word: w, meaning: m });
-        saveDeckData(DECK_CONFIG[deckIdx].id, state.words);
+        lib.words.push({ word: w, meaning: m });
+        saveAllData(libraries);
         wordInput.value = '';
         meaningInput.value = '';
-        renderList(deckIdx);
-        updateBadge(deckIdx);
-        // 自动抽新词
-        drawCard(deckIdx);
-        // 保存后同步更新存储
+        renderList();
+        updateCounter();
+        drawCard();
     }
 
-    // -------- 删除单词 --------
-    function deleteWord(deckIdx, wordIdx) {
-        const state = deckStates[deckIdx];
-        if (!state) return;
-        if (wordIdx < 0 || wordIdx >= state.words.length) return;
-        if (confirm('删除 "' + state.words[wordIdx].word + '" ？')) {
-            state.words.splice(wordIdx, 1);
-            saveDeckData(DECK_CONFIG[deckIdx].id, state.words);
-            renderList(deckIdx);
-            updateBadge(deckIdx);
-            if (state.words.length > 0) {
-                drawCard(deckIdx);
-            } else {
-                const wordEl = document.getElementById('word_' + deckIdx);
-                const meaningEl = document.getElementById('meaning_' + deckIdx);
-                if (wordEl) wordEl.textContent = '📭';
-                if (meaningEl) {
-                    meaningEl.textContent = '词库为空，添加新词吧';
-                    meaningEl.className = 'card-meaning';
-                }
+    function deleteWord(index) {
+        const lib = getCurrentLib();
+        if (index < 0 || index >= lib.words.length) return;
+        if (confirm('删除 "' + lib.words[index].word + '" ？')) {
+            lib.words.splice(index, 1);
+            saveAllData(libraries);
+            renderList();
+            updateCounter();
+            if (lib.words.length > 0) drawCard();
+            else {
+                wordEl.textContent = '📭';
+                meaningEl.textContent = '词库为空，添加新词吧';
+                meaningEl.className = 'meaning';
+                currentWord = null;
             }
         }
     }
 
-    // -------- 滑动切换逻辑 --------
-    function setupSwipe() {
-        wrapper.addEventListener('touchstart', function(e) {
-            if (e.touches.length === 1) {
-                touchStartX = e.touches[0].clientX;
-                touchCurrentX = touchStartX;
-                isDragging = true;
-                isSwiping = false;
-            }
-        }, { passive: true });
-
-        wrapper.addEventListener('touchmove', function(e) {
-            if (!isDragging || e.touches.length !== 1) return;
-            const deltaX = e.touches[0].clientX - touchStartX;
-            if (Math.abs(deltaX) > 15) {
-                isSwiping = true;
-                e.preventDefault(); // 阻止页面滚动
-            }
-            // 实时跟随手指偏移（可做视觉反馈，为了简化只做切换判定）
-            touchCurrentX = e.touches[0].clientX;
-        }, { passive: false });
-
-        wrapper.addEventListener('touchend', function(e) {
-            if (!isDragging) return;
-            isDragging = false;
-            if (!isSwiping) return;
-            const deltaX = touchCurrentX - touchStartX;
-            const threshold = 50;
-            if (Math.abs(deltaX) > threshold) {
-                if (deltaX < 0 && currentIndex < DECK_CONFIG.length - 1) {
-                    // 左滑 -> 下一个
-                    currentIndex++;
-                } else if (deltaX > 0 && currentIndex > 0) {
-                    // 右滑 -> 上一个
-                    currentIndex--;
-                }
-                // 如果有效切换，更新界面
-                if (currentIndex >= 0 && currentIndex < DECK_CONFIG.length) {
-                    updateAppTheme(currentIndex);
-                    updateIndicator();
-                    // 滑动动画由 CSS transition 完成
-                    track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
-                    // 更新当前词库的列表和徽章（已渲染，但数据可能已变）
-                    updateAllLists();
-                    updateAllBadges();
-                }
-            }
-            isSwiping = false;
-        }, { passive: true });
+    function renderList() {
+        const lib = getCurrentLib();
+        const words = lib.words || [];
+        if (words.length === 0) {
+            listEl.innerHTML = '<div style="color:#4a5a7a;text-align:center;padding:16px;font-size:14px">还没有词，添加一些吧</div>';
+            return;
+        }
+        let html = '';
+        words.forEach((item, i) => {
+            html += `<div class="list-item" style="border-left-color:${lib.accent};">
+                <span><span class="w">${esc(item.word)}</span><span class="m">${esc(item.meaning)}</span></span>
+                <button class="del" data-index="${i}">✕</button>
+            </div>`;
+        });
+        listEl.innerHTML = html;
+        listEl.querySelectorAll('.del').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const idx = parseInt(this.getAttribute('data-index'), 10);
+                if (!isNaN(idx)) deleteWord(idx);
+            });
+        });
     }
 
-    // -------- 初始化滑动位置 --------
-    function setInitialSlide() {
-        track.style.transform = 'translateX(0%)';
+    function updateCounter() {
+        const lib = getCurrentLib();
+        const count = (lib.words || []).length;
+        counterEl.textContent = `共 ${count} 个词 · 已抽 ${drawCount} 次`;
     }
 
-    // -------- 禁用缩放（额外保险） --------
-    function disableZoom() {
-        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-        document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
-        document.addEventListener('gestureend', function(e) { e.preventDefault(); });
-        document.addEventListener('touchmove', function(e) {
-            if (e.touches.length > 1) {
-                e.preventDefault();
+    function esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // ============================================================
+    // 6. 手势控制（左右滑动）
+    // ============================================================
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isSwiping = false;
+
+    app.addEventListener('touchstart', function(e) {
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        isSwiping = false;
+    }, { passive: true });
+
+    app.addEventListener('touchmove', function(e) {
+        if (e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+            isSwiping = true;
+            e.preventDefault();
+            if (deltaX < -40 && currentIndex < libraries.length - 1) {
+                goToLibrary(currentIndex + 1);
+                touchStartX = touch.clientX;
+            } else if (deltaX > 40 && currentIndex > 0) {
+                goToLibrary(currentIndex - 1);
+                touchStartX = touch.clientX;
             }
-        }, { passive: false });
-    }
+        }
+    }, { passive: false });
 
-    // -------- 初始化 --------
+    // ============================================================
+    // 7. 拦截缩放
+    // ============================================================
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
+    document.addEventListener('gestureend', function(e) { e.preventDefault(); });
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.list-area')) return;
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    // ============================================================
+    // 8. 初始化
+    // ============================================================
     function init() {
-        initDecks();
-        renderDecks();
-        setInitialSlide();
-        setupSwipe();
-        disableZoom();
-        // 默认选中第一个词库，抽一张卡
-        drawCard(0);
-        // 更新所有徽章
-        updateAllBadges();
+        // 尝试恢复上次词库索引
+        try {
+            const savedIdx = localStorage.getItem('current_lib_index');
+            if (savedIdx !== null) {
+                const idx = parseInt(savedIdx, 10);
+                if (!isNaN(idx) && idx >= 0 && idx < libraries.length) {
+                    currentIndex = idx;
+                }
+            }
+        } catch (_) {}
+        renderDots();
+        goToLibrary(currentIndex);
+        // 事件绑定
+        document.getElementById('drawBtn').addEventListener('click', drawCard);
+        document.getElementById('revealBtn').addEventListener('click', revealMeaning);
+        document.getElementById('addBtn').addEventListener('click', addWord);
+        cardArea.addEventListener('click', revealMeaning);
+        wordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                meaningInput.focus();
+            }
+        });
+        meaningInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addWord();
+            }
+        });
     }
 
     init();
-
-    // 暴露给调试（可选）
-    window.__app = {
-        decks: deckStates,
-        config: DECK_CONFIG,
-        currentIndex: () => currentIndex,
-        draw: drawCard,
-        add: addWord,
-        delete: deleteWord
-    };
-
-    console.log('✅ 五色词库已加载！');
-    console.log('💡 左右滑动切换词库，每个词库独立存储。');
+})();
 </script>
 </body>
 </html>
