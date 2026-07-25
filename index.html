@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>五色词库 · 纯黑版</title>
+    <title>五色词库 · 光晕版</title>
     <style>
         * {
             margin: 0;
@@ -30,10 +30,41 @@
             border-radius: 32px;
             padding: 24px 20px 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            transition: box-shadow 0.3s ease;
+            transition: box-shadow 0.5s ease;
             touch-action: manipulation;
             position: relative;
             overflow: hidden;
+        }
+        /* 光晕背景层 */
+        .glow {
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            transition: background 0.6s ease, opacity 0.6s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-bottom {
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            transition: background 0.6s ease, opacity 0.6s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .header, .card, .btn-group, .add-area, .list-area, .counter, .hint, .swipe-hint {
+            position: relative;
+            z-index: 1;
         }
         .header {
             display: flex;
@@ -60,12 +91,12 @@
             height: 10px;
             border-radius: 50%;
             background: #3a3a5a;
-            transition: background 0.3s ease, transform 0.2s ease;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             cursor: pointer;
         }
         .dot.active {
-            background: #e94560;
             transform: scale(1.25);
+            box-shadow: 0 0 12px currentColor;
         }
         .card {
             background: #222;
@@ -74,9 +105,13 @@
             min-height: 170px;
             text-align: center;
             border: 1px solid rgba(255,255,255,0.06);
-            transition: border 0.3s ease;
+            transition: border 0.3s ease, box-shadow 0.4s ease;
             touch-action: manipulation;
             cursor: pointer;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+        .card.glow-border {
+            border-color: transparent;
         }
         .word {
             font-size: 42px;
@@ -84,6 +119,7 @@
             color: #f0f0f0;
             user-select: none;
             -webkit-user-select: none;
+            text-shadow: 0 0 20px rgba(255,255,255,0.05);
         }
         .meaning {
             font-size: 20px;
@@ -91,7 +127,7 @@
             margin-top: 12px;
             min-height: 30px;
             opacity: 0;
-            transition: opacity 0.3s ease, color 0.3s ease;
+            transition: opacity 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -113,7 +149,7 @@
             font-weight: 600;
             color: #fff;
             cursor: pointer;
-            transition: background 0.3s ease, transform 0.1s ease;
+            transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
@@ -124,6 +160,7 @@
         }
         .btn-primary {
             background: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
         }
         .btn-secondary {
             background: #2a3a5e;
@@ -147,11 +184,12 @@
             color: #e0e0e0;
             font-size: 15px;
             outline: none;
-            transition: border 0.3s ease;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
             touch-action: manipulation;
         }
         .add-area input:focus {
             border-color: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.15);
         }
         .list-area {
             margin-top: 16px;
@@ -168,7 +206,7 @@
             border-radius: 12px;
             margin-bottom: 6px;
             border-left: 4px solid #e94560;
-            transition: border 0.3s ease;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
             touch-action: manipulation;
         }
         .list-item .w {
@@ -227,11 +265,15 @@
             letter-spacing: 0.3px;
             user-select: none;
             -webkit-user-select: none;
+            transition: color 0.3s ease;
         }
     </style>
 </head>
 <body>
 <div class="app" id="app">
+    <div class="glow" id="glowTop"></div>
+    <div class="glow-bottom" id="glowBottom"></div>
+
     <div class="header">
         <div class="lib-name" id="libName">猎兽黑红</div>
         <div class="dots" id="dots"></div>
@@ -262,12 +304,13 @@
 
 <script>
 (function() {
+    // 五个词库，每个带光晕颜色
     const LIBRARIES = [
-        { id: 'hunter', name: '猎兽黑红', accent: '#e94560' },
-        { id: 'sunset', name: '夕彩赤黄', accent: '#f59e0b' },
-        { id: 'forest', name: '荫萌翠绿', accent: '#10b981' },
-        { id: 'sky', name: '碧空蔚蓝', accent: '#3b82f6' },
-        { id: 'violet', name: '罗兰紫色', accent: '#a855f7' }
+        { id: 'hunter', name: '猎兽黑红', accent: '#e94560', glow: 'rgba(233, 69, 96, 0.5)' },
+        { id: 'sunset', name: '夕彩赤黄', accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' },
+        { id: 'forest', name: '荫萌翠绿', accent: '#10b981', glow: 'rgba(16, 185, 129, 0.5)' },
+        { id: 'sky', name: '碧空蔚蓝', accent: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+        { id: 'violet', name: '罗兰紫色', accent: '#a855f7', glow: 'rgba(168, 85, 247, 0.5)' }
     ];
 
     const STORAGE_KEY = 'five_libraries_data';
@@ -310,6 +353,8 @@
     let lastDrawnIndex = -1;
 
     const app = document.getElementById('app');
+    const glowTop = document.getElementById('glowTop');
+    const glowBottom = document.getElementById('glowBottom');
     const libName = document.getElementById('libName');
     const dots = document.getElementById('dots');
     const cardArea = document.getElementById('cardArea');
@@ -327,16 +372,52 @@
 
     function applyTheme(lib) {
         const accent = lib.accent;
+        const glow = lib.glow;
+
+        // 光晕
+        glowTop.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
+        glowBottom.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
+        glowTop.style.opacity = '0.35';
+        glowBottom.style.opacity = '0.2';
+
+        // 词库名
         libName.style.color = '#f0f0f0';
-        cardArea.style.border = '1px solid ' + accent + '44';
-        document.querySelector('.btn-primary').style.background = accent;
+
+        // 卡片边框光晕
+        cardArea.style.border = `1px solid ${accent}55`;
+        cardArea.style.boxShadow = `0 0 40px ${accent}22, inset 0 0 30px ${accent}11`;
+
+        // 主按钮光晕
+        const primaryBtn = document.querySelector('.btn-primary');
+        primaryBtn.style.background = accent;
+        primaryBtn.style.boxShadow = `0 0 30px ${accent}44`;
+
+        // 列表项左边框
         document.querySelectorAll('.list-item').forEach(el => {
             el.style.borderLeftColor = accent;
         });
+
+        // 输入框聚焦光晕
+        document.querySelectorAll('.add-area input').forEach(inp => {
+            inp.addEventListener('focus', function() {
+                this.style.borderColor = accent;
+                this.style.boxShadow = `0 0 25px ${accent}22`;
+            });
+            inp.addEventListener('blur', function() {
+                this.style.borderColor = '#2a3a5e';
+                this.style.boxShadow = 'none';
+            });
+        });
+
+        // 指示点
         document.querySelectorAll('.dot').forEach((dot, i) => {
             dot.style.background = i === currentIndex ? accent : '#3a3a5a';
+            dot.style.color = accent;
+            dot.style.boxShadow = i === currentIndex ? `0 0 16px ${accent}66` : 'none';
         });
+
         libName.textContent = lib.name;
+        swipeHint.style.color = `${accent}77`;
         swipeHint.textContent = (currentIndex === 0) ? '→ 滑动切换' :
                                 (currentIndex === libraries.length - 1) ? '← 滑动切换' :
                                 '← 滑动切换 →';
