@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>五色词库 · 滑动动画版</title>
+    <title>五色词库 · 划走版</title>
     <style>
         * {
             margin: 0;
@@ -34,7 +34,7 @@
         }
         .app-slider {
             display: flex;
-            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
             touch-action: none;
         }
@@ -345,7 +345,6 @@
 
     let libraries = loadAllData();
     let currentIndex = 0;
-    // 每个词库独立记录上次抽到的索引和抽卡次数
     let lastDrawnMap = {};
     let drawCountMap = {};
 
@@ -354,8 +353,6 @@
     // ============================================================
     const slider = document.getElementById('appSlider');
     const wrapper = document.getElementById('appWrapper');
-
-    // 存储每个页面的 DOM 引用
     const pageRefs = [];
 
     function buildPages() {
@@ -393,12 +390,10 @@
             slider.appendChild(page);
             pageRefs.push(page);
         });
-        // 初始化每个词库的显示
         libraries.forEach((lib, idx) => {
             if (!lastDrawnMap[lib.id]) lastDrawnMap[lib.id] = -1;
             if (!drawCountMap[lib.id]) drawCountMap[lib.id] = 0;
             const page = pageRefs[idx];
-            // 存储关键元素引用到 page 对象上
             page._lib = lib;
             page._idx = idx;
             page._glowTop = page.querySelector(`#glowTop-${idx}`);
@@ -416,16 +411,13 @@
             page._revealBtn = page.querySelector(`#revealBtn-${idx}`);
             page._addBtn = page.querySelector(`#addBtn-${idx}`);
             page._swipeHint = page.querySelector(`#swipeHint-${idx}`);
-            // 初始化显示
             applyThemeToPage(page, lib, idx);
             renderDotsForPage(page, lib, idx);
             renderListForPage(page, lib, idx);
             updateCounterForPage(page, lib, idx);
             drawCardForPage(page, lib, idx);
-            // 绑定事件
             bindPageEvents(page, lib, idx);
         });
-        // 设置初始位置
         goToLibrary(currentIndex, false);
     }
 
@@ -435,25 +427,21 @@
     function applyThemeToPage(page, lib, idx) {
         const accent = lib.accent;
         const glow = lib.glow;
-        const glowTop = page._glowTop;
-        const glowBottom = page._glowBottom;
-        glowTop.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
-        glowBottom.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
-        glowTop.style.opacity = '0.35';
-        glowBottom.style.opacity = '0.2';
+        page._glowTop.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
+        page._glowBottom.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
+        page._glowTop.style.opacity = '0.35';
+        page._glowBottom.style.opacity = '0.2';
         page._libName.style.color = '#f0f0f0';
         page._cardArea.style.border = `1px solid ${accent}55`;
         page._cardArea.style.boxShadow = `0 0 40px ${accent}22, inset 0 0 30px ${accent}11`;
-        const primaryBtn = page._drawBtn;
-        primaryBtn.style.background = accent;
-        primaryBtn.style.boxShadow = `0 0 30px ${accent}44`;
-        // 列表项左边框在 renderList 中处理
-        page._swipeHint.style.color = `${accent}77`;
+        page._drawBtn.style.background = accent;
+        page._drawBtn.style.boxShadow = `0 0 30px ${accent}44`;
         const total = libraries.length;
         const hint = (idx === 0) ? '→ 滑动切换' :
                      (idx === total - 1) ? '← 滑动切换' :
                      '← 滑动切换 →';
         page._swipeHint.textContent = hint;
+        page._swipeHint.style.color = `${accent}77`;
     }
 
     function renderDotsForPage(page, lib, idx) {
@@ -473,7 +461,6 @@
                 }
             });
         });
-        // 更新指示点颜色
         container.querySelectorAll('.dot').forEach((dot, i) => {
             const accent = libraries[i].accent;
             dot.style.color = accent;
@@ -549,14 +536,12 @@
         meaningEl.className = 'meaning';
         drawCountMap[lib.id] = (drawCountMap[lib.id] || 0) + 1;
         updateCounterForPage(page, lib, idx);
-        // 闪动反馈
         wordEl.style.transition = 'none';
         wordEl.style.opacity = '0.6';
         setTimeout(() => {
             wordEl.style.transition = 'opacity 0.15s ease';
             wordEl.style.opacity = '1';
         }, 10);
-        // 保存数据（仅当词库有变化时）
         saveAllData(libraries);
     }
 
@@ -655,7 +640,7 @@
     }
 
     // ============================================================
-    // 7. 切换词库（带动画）
+    // 7. 切换词库（无回弹，自然划出）
     // ============================================================
     let isAnimating = false;
 
@@ -664,17 +649,16 @@
         if (index < 0) index = 0;
         if (index >= libraries.length) index = libraries.length - 1;
         if (index === currentIndex) {
-            // 确保位置正确
-            slider.style.transition = animate ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+            slider.style.transition = animate ? 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
             slider.style.transform = `translateX(-${index * 100}%)`;
             if (!animate) slider.style.transition = 'none';
             return;
         }
         isAnimating = true;
         currentIndex = index;
-        slider.style.transition = animate ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+        slider.style.transition = animate ? 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
         slider.style.transform = `translateX(-${index * 100}%)`;
-        // 更新指示点（所有页面）
+        // 更新指示点
         pageRefs.forEach((page, idx) => {
             const dots = page._dots;
             if (dots) {
@@ -692,29 +676,19 @@
                 });
             }
         });
-        // 更新滑动提示（所有页面）
-        pageRefs.forEach((page, idx) => {
-            const total = libraries.length;
-            const hint = (idx === 0) ? '→ 滑动切换' :
-                         (idx === total - 1) ? '← 滑动切换' :
-                         '← 滑动切换 →';
-            if (page._swipeHint) page._swipeHint.textContent = hint;
-        });
-        // 保存当前索引
         try { localStorage.setItem('current_lib_index', String(currentIndex)); } catch (_) {}
         setTimeout(() => {
             isAnimating = false;
-        }, 450);
+        }, 550);
     }
 
     // ============================================================
-    // 8. 手势滑动（带动画）
+    // 8. 手势滑动（像划出屏幕一样自然）
     // ============================================================
     let startX = 0;
     let startY = 0;
-    let currentTranslateX = 0;
-    let isSwiping = false;
     let startIndex = 0;
+    let isSwiping = false;
 
     wrapper.addEventListener('touchstart', function(e) {
         if (isAnimating) return;
@@ -722,9 +696,8 @@
         startX = touch.clientX;
         startY = touch.clientY;
         startIndex = currentIndex;
-        currentTranslateX = -currentIndex * 100;
-        slider.style.transition = 'none';
         isSwiping = false;
+        slider.style.transition = 'none';
     }, { passive: true });
 
     wrapper.addEventListener('touchmove', function(e) {
@@ -733,12 +706,11 @@
         const touch = e.touches[0];
         const deltaX = touch.clientX - startX;
         const deltaY = touch.clientY - startY;
-        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+        if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
             e.preventDefault();
             isSwiping = true;
             const percent = (deltaX / wrapper.offsetWidth) * 100;
-            let newPercent = currentTranslateX + percent;
-            // 边界限制
+            let newPercent = -startIndex * 100 + percent;
             if (newPercent > 0) newPercent = 0;
             if (newPercent < -(libraries.length - 1) * 100) newPercent = -(libraries.length - 1) * 100;
             slider.style.transform = `translateX(${newPercent}%)`;
@@ -748,7 +720,7 @@
     wrapper.addEventListener('touchend', function(e) {
         if (!isSwiping || isAnimating) return;
         const deltaX = e.changedTouches[0].clientX - startX;
-        const threshold = wrapper.offsetWidth * 0.25;
+        const threshold = wrapper.offsetWidth * 0.2;
         let targetIndex = startIndex;
         if (deltaX < -threshold && startIndex < libraries.length - 1) {
             targetIndex = startIndex + 1;
@@ -768,7 +740,6 @@
         return div.innerHTML;
     }
 
-    // 锁缩放
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
     document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
     document.addEventListener('gestureend', function(e) { e.preventDefault(); });
@@ -789,11 +760,10 @@
             }
         } catch (_) {}
         buildPages();
-        // 确保 slider 位置正确
         slider.style.transition = 'none';
         slider.style.transform = `translateX(-${currentIndex * 100}%)`;
         setTimeout(() => {
-            slider.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            slider.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
         }, 50);
     }
 
