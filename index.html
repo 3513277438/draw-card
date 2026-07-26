@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>五色词库 · 纯滑版</title>
+    <title>五色词库 · 音效版</title>
     <style>
         * {
             margin: 0;
@@ -34,7 +34,7 @@
         }
         .app-slider {
             display: flex;
-            transition: transform 0.4s ease;
+            transition: transform 0.25s ease-out;
             will-change: transform;
             touch-action: none;
         }
@@ -206,6 +206,7 @@
             max-height: 170px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
         .list-item {
             display: flex;
@@ -295,6 +296,47 @@
 
 <script>
 (function() {
+    // ============================================================
+    // 0. 音效系统（解压咔嗒声）
+    // ============================================================
+    let audioCtx = null;
+
+    function playClickSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // 如果音频上下文是 suspended 状态，恢复它
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // 主音：短促清脆的“咔嗒”
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'square';
+            osc.frequency.value = 800;
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.06);
+            // 第二层：柔和的高频余音
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.type = 'sine';
+            osc2.frequency.value = 1200;
+            gain2.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+            osc2.start(audioCtx.currentTime + 0.01);
+            osc2.stop(audioCtx.currentTime + 0.05);
+        } catch (e) {
+            // 静默处理，不影响主功能
+        }
+    }
+
     // ============================================================
     // 1. 词库配置
     // ============================================================
@@ -511,6 +553,8 @@
         const words = lib.words || [];
         const wordEl = page._word;
         const meaningEl = page._meaning;
+        // 播放音效
+        playClickSound();
         if (words.length === 0) {
             wordEl.textContent = '📭';
             meaningEl.textContent = '词库为空，添加新词吧';
@@ -639,7 +683,7 @@
     }
 
     // ============================================================
-    // 7. 切换词库（最简单的平移）
+    // 7. 切换词库（带音效）
     // ============================================================
     let isAnimating = false;
 
@@ -648,14 +692,16 @@
         if (index < 0) index = 0;
         if (index >= libraries.length) index = libraries.length - 1;
         if (index === currentIndex) {
-            slider.style.transition = animate ? 'transform 0.35s ease' : 'none';
+            slider.style.transition = animate ? 'transform 0.25s ease-out' : 'none';
             slider.style.transform = `translateX(-${index * 100}%)`;
             if (!animate) slider.style.transition = 'none';
             return;
         }
+        // 切换时播放音效
+        playClickSound();
         isAnimating = true;
         currentIndex = index;
-        slider.style.transition = animate ? 'transform 0.35s ease' : 'none';
+        slider.style.transition = animate ? 'transform 0.25s ease-out' : 'none';
         slider.style.transform = `translateX(-${index * 100}%)`;
         // 更新指示点
         pageRefs.forEach((page, idx) => {
@@ -678,7 +724,7 @@
         try { localStorage.setItem('current_lib_index', String(currentIndex)); } catch (_) {}
         setTimeout(() => {
             isAnimating = false;
-        }, 400);
+        }, 300);
     }
 
     // ============================================================
@@ -688,9 +734,10 @@
     let startY = 0;
     let startIndex = 0;
     let isSwiping = false;
+    let swipeLock = false;
 
     wrapper.addEventListener('touchstart', function(e) {
-        if (isAnimating) return;
+        if (isAnimating || swipeLock) return;
         const touch = e.touches[0];
         startX = touch.clientX;
         startY = touch.clientY;
@@ -700,12 +747,12 @@
     }, { passive: true });
 
     wrapper.addEventListener('touchmove', function(e) {
-        if (isAnimating) return;
+        if (isAnimating || swipeLock) return;
         if (e.touches.length !== 1) return;
         const touch = e.touches[0];
         const deltaX = touch.clientX - startX;
         const deltaY = touch.clientY - startY;
-        if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
             e.preventDefault();
             isSwiping = true;
             const percent = (deltaX / wrapper.offsetWidth) * 100;
@@ -717,16 +764,20 @@
     }, { passive: false });
 
     wrapper.addEventListener('touchend', function(e) {
-        if (!isSwiping || isAnimating) return;
+        if (!isSwiping || isAnimating || swipeLock) return;
         const deltaX = e.changedTouches[0].clientX - startX;
-        const threshold = wrapper.offsetWidth * 0.2;
+        const threshold = wrapper.offsetWidth * 0.15;
         let targetIndex = startIndex;
         if (deltaX < -threshold && startIndex < libraries.length - 1) {
             targetIndex = startIndex + 1;
         } else if (deltaX > threshold && startIndex > 0) {
             targetIndex = startIndex - 1;
         }
+        swipeLock = true;
         goToLibrary(targetIndex, true);
+        setTimeout(() => {
+            swipeLock = false;
+        }, 300);
         isSwiping = false;
     }, { passive: true });
 
@@ -762,8 +813,10 @@
         slider.style.transition = 'none';
         slider.style.transform = `translateX(-${currentIndex * 100}%)`;
         setTimeout(() => {
-            slider.style.transition = 'transform 0.35s ease';
+            slider.style.transition = 'transform 0.25s ease-out';
         }, 50);
+        // 首次打开时播放一次音效（让用户感知）
+        setTimeout(() => { playClickSound(); }, 300);
     }
 
     init();
