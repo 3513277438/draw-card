@@ -137,7 +137,8 @@
             margin-top: 12px;
             min-height: 30px;
             opacity: 0;
-            transition: opacity 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+            /* ★★★ 移除过渡动画，瞬间切换 ★★★ */
+            transition: none;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -301,7 +302,6 @@
     // ============================================================
     let audioCtx = null;
 
-    // 基础音效播放函数
     function playSound(options) {
         try {
             if (!audioCtx) {
@@ -322,7 +322,6 @@
                 secondDelay: 0.01
             };
             const opts = Object.assign({}, defaultOptions, options);
-            // 主音
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
@@ -333,7 +332,6 @@
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + opts.delay + opts.duration);
             osc.start(audioCtx.currentTime + opts.delay);
             osc.stop(audioCtx.currentTime + opts.delay + opts.duration + 0.01);
-            // 第二音（可选）
             if (opts.secondFreq) {
                 const osc2 = audioCtx.createOscillator();
                 const gain2 = audioCtx.createGain();
@@ -349,15 +347,13 @@
         } catch (e) {}
     }
 
-    // 抽卡音效：根据词库索引选择不同音调
     function playDrawSound(libIndex) {
-        // 五个词库分别对应不同的音高和波形
         const presets = [
-            { frequency: 600, type: 'square', secondFreq: 1000, volume: 0.07 },   // 猎兽黑红
-            { frequency: 800, type: 'sawtooth', secondFreq: 1200, volume: 0.08 }, // 夕彩赤黄
-            { frequency: 1000, type: 'sine', secondFreq: 1400, volume: 0.06 },    // 荫萌翠绿
-            { frequency: 1200, type: 'square', secondFreq: 1600, volume: 0.07 },  // 碧空蔚蓝
-            { frequency: 1400, type: 'sine', secondFreq: 1800, volume: 0.05 }     // 罗兰紫色
+            { frequency: 600, type: 'square', secondFreq: 1000, volume: 0.07 },
+            { frequency: 800, type: 'sawtooth', secondFreq: 1200, volume: 0.08 },
+            { frequency: 1000, type: 'sine', secondFreq: 1400, volume: 0.06 },
+            { frequency: 1200, type: 'square', secondFreq: 1600, volume: 0.07 },
+            { frequency: 1400, type: 'sine', secondFreq: 1800, volume: 0.05 }
         ];
         const preset = presets[libIndex % presets.length];
         playSound({
@@ -371,7 +367,6 @@
         });
     }
 
-    // 滑动音效（短促嗖声）
     function playSwipeSound() {
         try {
             if (!audioCtx) {
@@ -380,7 +375,6 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            // 使用白噪声加快速衰减制造“嗖”声
             const bufferSize = audioCtx.sampleRate * 0.05;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
@@ -400,7 +394,7 @@
     }
 
     // ============================================================
-    // 1. 词库配置（增加音效标识）
+    // 1. 词库配置
     // ============================================================
     const LIBRARIES = [
         { id: 'hunter', name: '猎兽黑红', accent: '#e94560', glow: 'rgba(233, 69, 96, 0.5)' },
@@ -612,18 +606,20 @@
     }
 
     // ============================================================
-    // 核心抽卡函数（带独立音效）
+    // ★★★ 核心修复：抽新词时彻底关闭释义，无过渡残留 ★★★
     // ============================================================
     function drawCardForPage(page, lib, idx) {
         const words = lib.words || [];
         const wordEl = page._word;
         const meaningEl = page._meaning;
 
-        // ★ 播放当前词库对应的抽卡音效 ★
+        // 播放当前词库对应的抽卡音效
         playDrawSound(idx);
 
-        // 关闭释义
+        // ★★★ 强制关闭释义（瞬间，无过渡）★★★
         meaningEl.classList.remove('show');
+        // 确保没有残留的过渡动画影响
+        meaningEl.style.transition = 'none';
 
         if (words.length === 0) {
             wordEl.textContent = '📭';
@@ -646,6 +642,7 @@
         const word = words[wordIdx];
         wordEl.textContent = word.word;
         meaningEl.textContent = word.meaning;
+        // 确保释义是隐藏状态
         meaningEl.classList.remove('show');
         drawCountMap[lib.id] = (drawCountMap[lib.id] || 0) + 1;
         updateCounterForPage(page, lib, idx);
@@ -676,7 +673,8 @@
                 const wordEl = page._word;
                 if (wordEl.textContent === '🎲' || wordEl.textContent === '📭') {
                     drawCardForPage(page, lib, idx);
-                    setTimeout(() => { meaningEl.classList.add('show'); }, 200);
+                    // 抽完卡后立即显示释义（无过渡）
+                    setTimeout(() => { meaningEl.classList.add('show'); }, 50);
                 } else {
                     meaningEl.classList.add('show');
                 }
@@ -692,7 +690,7 @@
                 const wordEl = page._word;
                 if (wordEl.textContent === '🎲' || wordEl.textContent === '📭') {
                     drawCardForPage(page, lib, idx);
-                    setTimeout(() => { meaningEl.classList.add('show'); }, 200);
+                    setTimeout(() => { meaningEl.classList.add('show'); }, 50);
                 } else {
                     meaningEl.classList.add('show');
                 }
@@ -771,7 +769,6 @@
             if (!animate) slider.style.transition = 'none';
             return;
         }
-        // ★ 播放滑动音效 ★
         playSwipeSound();
 
         isAnimating = true;
@@ -889,7 +886,6 @@
         setTimeout(() => {
             slider.style.transition = 'transform 0.25s ease-out';
         }, 50);
-        // 首次打开播放一个音效示意
         setTimeout(() => { playDrawSound(0); }, 300);
     }
 
