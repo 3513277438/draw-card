@@ -297,48 +297,110 @@
 <script>
 (function() {
     // ============================================================
-    // 0. 音效系统（解压咔嗒声）
+    // 0. 音效系统（带参数）
     // ============================================================
     let audioCtx = null;
 
-    function playClickSound() {
+    // 基础音效播放函数
+    function playSound(options) {
         try {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            // 如果音频上下文是 suspended 状态，恢复它
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            // 主音：短促清脆的“咔嗒”
+            const defaultOptions = {
+                frequency: 800,
+                type: 'square',
+                volume: 0.08,
+                duration: 0.06,
+                delay: 0,
+                secondFreq: 1200,
+                secondVolume: 0.03,
+                secondDuration: 0.04,
+                secondDelay: 0.01
+            };
+            const opts = Object.assign({}, defaultOptions, options);
+            // 主音
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            osc.type = 'square';
-            osc.frequency.value = 800;
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
-            osc.start(audioCtx.currentTime);
-            osc.stop(audioCtx.currentTime + 0.06);
-            // 第二层：柔和的高频余音
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.connect(gain2);
-            gain2.connect(audioCtx.destination);
-            osc2.type = 'sine';
-            osc2.frequency.value = 1200;
-            gain2.gain.setValueAtTime(0.03, audioCtx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-            osc2.start(audioCtx.currentTime + 0.01);
-            osc2.stop(audioCtx.currentTime + 0.05);
-        } catch (e) {
-            // 静默处理，不影响主功能
-        }
+            osc.type = opts.type;
+            osc.frequency.value = opts.frequency;
+            gain.gain.setValueAtTime(opts.volume, audioCtx.currentTime + opts.delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + opts.delay + opts.duration);
+            osc.start(audioCtx.currentTime + opts.delay);
+            osc.stop(audioCtx.currentTime + opts.delay + opts.duration + 0.01);
+            // 第二音（可选）
+            if (opts.secondFreq) {
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.value = opts.secondFreq;
+                gain2.gain.setValueAtTime(opts.secondVolume, audioCtx.currentTime + opts.secondDelay);
+                gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + opts.secondDelay + opts.secondDuration);
+                osc2.start(audioCtx.currentTime + opts.secondDelay);
+                osc2.stop(audioCtx.currentTime + opts.secondDelay + opts.secondDuration + 0.01);
+            }
+        } catch (e) {}
+    }
+
+    // 抽卡音效：根据词库索引选择不同音调
+    function playDrawSound(libIndex) {
+        // 五个词库分别对应不同的音高和波形
+        const presets = [
+            { frequency: 600, type: 'square', secondFreq: 1000, volume: 0.07 },   // 猎兽黑红
+            { frequency: 800, type: 'sawtooth', secondFreq: 1200, volume: 0.08 }, // 夕彩赤黄
+            { frequency: 1000, type: 'sine', secondFreq: 1400, volume: 0.06 },    // 荫萌翠绿
+            { frequency: 1200, type: 'square', secondFreq: 1600, volume: 0.07 },  // 碧空蔚蓝
+            { frequency: 1400, type: 'sine', secondFreq: 1800, volume: 0.05 }     // 罗兰紫色
+        ];
+        const preset = presets[libIndex % presets.length];
+        playSound({
+            frequency: preset.frequency,
+            type: preset.type,
+            secondFreq: preset.secondFreq,
+            volume: preset.volume,
+            duration: 0.07,
+            secondDuration: 0.05,
+            secondVolume: 0.03
+        });
+    }
+
+    // 滑动音效（短促嗖声）
+    function playSwipeSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // 使用白噪声加快速衰减制造“嗖”声
+            const bufferSize = audioCtx.sampleRate * 0.05;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 8);
+            }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start(audioCtx.currentTime);
+            noise.stop(audioCtx.currentTime + 0.06);
+        } catch (e) {}
     }
 
     // ============================================================
-    // 1. 词库配置
+    // 1. 词库配置（增加音效标识）
     // ============================================================
     const LIBRARIES = [
         { id: 'hunter', name: '猎兽黑红', accent: '#e94560', glow: 'rgba(233, 69, 96, 0.5)' },
@@ -549,18 +611,26 @@
         page._counter.textContent = `共 ${count} 个词 · 已抽 ${drawn} 次`;
     }
 
+    // ============================================================
+    // 核心抽卡函数（带独立音效）
+    // ============================================================
     function drawCardForPage(page, lib, idx) {
         const words = lib.words || [];
         const wordEl = page._word;
         const meaningEl = page._meaning;
-        // 播放音效
-        playClickSound();
+
+        // ★ 播放当前词库对应的抽卡音效 ★
+        playDrawSound(idx);
+
+        // 关闭释义
+        meaningEl.classList.remove('show');
+
         if (words.length === 0) {
             wordEl.textContent = '📭';
             meaningEl.textContent = '词库为空，添加新词吧';
-            meaningEl.className = 'meaning';
             return;
         }
+
         let wordIdx;
         const lastIdx = lastDrawnMap[lib.id] ?? -1;
         if (words.length === 1) {
@@ -576,7 +646,7 @@
         const word = words[wordIdx];
         wordEl.textContent = word.word;
         meaningEl.textContent = word.meaning;
-        meaningEl.className = 'meaning';
+        meaningEl.classList.remove('show');
         drawCountMap[lib.id] = (drawCountMap[lib.id] || 0) + 1;
         updateCounterForPage(page, lib, idx);
         wordEl.style.transition = 'none';
@@ -596,13 +666,14 @@
             e.stopPropagation();
             drawCardForPage(page, lib, idx);
         });
+
         page._revealBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             const meaningEl = page._meaning;
-            const wordEl = page._word;
             if (meaningEl.classList.contains('show')) {
                 meaningEl.classList.remove('show');
             } else {
+                const wordEl = page._word;
                 if (wordEl.textContent === '🎲' || wordEl.textContent === '📭') {
                     drawCardForPage(page, lib, idx);
                     setTimeout(() => { meaningEl.classList.add('show'); }, 200);
@@ -611,13 +682,14 @@
                 }
             }
         });
+
         page._cardArea.addEventListener('click', function(e) {
             e.stopPropagation();
             const meaningEl = page._meaning;
-            const wordEl = page._word;
             if (meaningEl.classList.contains('show')) {
                 meaningEl.classList.remove('show');
             } else {
+                const wordEl = page._word;
                 if (wordEl.textContent === '🎲' || wordEl.textContent === '📭') {
                     drawCardForPage(page, lib, idx);
                     setTimeout(() => { meaningEl.classList.add('show'); }, 200);
@@ -626,6 +698,7 @@
                 }
             }
         });
+
         page._addBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             const w = page._wordInput.value.trim();
@@ -643,6 +716,7 @@
             updateCounterForPage(page, lib, idx);
             drawCardForPage(page, lib, idx);
         });
+
         page._wordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -683,7 +757,7 @@
     }
 
     // ============================================================
-    // 7. 切换词库（带音效）
+    // 7. 切换词库（带专属滑动音效）
     // ============================================================
     let isAnimating = false;
 
@@ -697,13 +771,13 @@
             if (!animate) slider.style.transition = 'none';
             return;
         }
-        // 切换时播放音效
-        playClickSound();
+        // ★ 播放滑动音效 ★
+        playSwipeSound();
+
         isAnimating = true;
         currentIndex = index;
         slider.style.transition = animate ? 'transform 0.25s ease-out' : 'none';
         slider.style.transform = `translateX(-${index * 100}%)`;
-        // 更新指示点
         pageRefs.forEach((page, idx) => {
             const dots = page._dots;
             if (dots) {
@@ -815,8 +889,8 @@
         setTimeout(() => {
             slider.style.transition = 'transform 0.25s ease-out';
         }, 50);
-        // 首次打开时播放一次音效（让用户感知）
-        setTimeout(() => { playClickSound(); }, 300);
+        // 首次打开播放一个音效示意
+        setTimeout(() => { playDrawSound(0); }, 300);
     }
 
     init();
