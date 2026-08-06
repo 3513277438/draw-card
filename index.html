@@ -3,990 +3,893 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>果园 · 日果</title>
+    <title>五色词库 · 音效版</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: none;
             -webkit-tap-highlight-color: transparent;
-            user-select: none;
         }
-        body {
-            background: #0f0f1a;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        html, body {
+            width: 100%;
             min-height: 100vh;
-            padding: 12px;
+            background: #0a0a0a;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #e8eef5;
+            padding: 12px;
+            overflow: hidden;
+            touch-action: none;
         }
-        .app {
-            max-width: 440px;
+        .app-wrapper {
             width: 100%;
-            background: #1a1a2e;
-            border-radius: 36px;
-            padding: 24px 18px 28px;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            touch-action: none;
+        }
+        .app-slider {
+            display: flex;
+            transition: transform 0.25s ease-out;
+            will-change: transform;
+            touch-action: none;
+        }
+        .app-page {
+            flex: 0 0 100%;
+            padding: 24px 20px 30px;
+            background: #1a1a1a;
+            border-radius: 32px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             position: relative;
-            border: 1px solid #2a2a4a;
+            overflow: hidden;
+            touch-action: none;
+            min-height: 560px;
         }
-        /* 标题 */
+        .glow {
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            transition: background 0.6s ease, opacity 0.6s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-bottom {
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            transition: background 0.6s ease, opacity 0.6s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .header, .card, .btn-group, .add-area, .list-area, .counter, .hint, .swipe-hint {
+            position: relative;
+            z-index: 1;
+        }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-            padding: 0 6px;
+            padding: 0 4px;
         }
-        .header h1 {
-            font-size: 22px;
-            font-weight: 600;
+        .lib-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f0f0f0;
             letter-spacing: 0.5px;
-            color: #e8eef5;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: color 0.3s ease;
         }
-        .header .date-badge {
-            font-size: 14px;
-            background: #2a2a4a;
-            padding: 6px 16px;
-            border-radius: 30px;
-            color: #8aaccc;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        /* ===== 选择页 ===== */
-        .fruit-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+        .dots {
+            display: flex;
             gap: 8px;
-            margin: 12px 0 18px;
         }
-        .fruit-card {
-            background: #1e1e3a;
-            border-radius: 18px;
-            padding: 12px 4px 10px;
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            position: relative;
-        }
-        .fruit-card:active { transform: scale(0.95); }
-        .fruit-card .icon {
-            font-size: 34px;
-            line-height: 1.2;
-        }
-        .fruit-card .label {
-            font-size: 11px;
-            color: #8aaccc;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-        .fruit-card .status {
-            font-size: 9px;
-            color: #5a7a9a;
-            margin-top: 2px;
-        }
-        .fruit-card.selected {
-            border-color: #6a9ec8;
-            background: #1e2a4a;
-            box-shadow: 0 0 20px rgba(100, 160, 220, 0.15);
-        }
-        .fruit-card.locked {
-            opacity: 0.45;
-            pointer-events: none;
-        }
-        .fruit-card .check-mark {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #4a8a6a;
-            color: white;
+        .dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            line-height: 20px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            background: #3a3a5a;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            cursor: pointer;
         }
-
-        /* ===== 种植页 ===== */
-        .grow-area {
-            background: #12122a;
+        .dot.active {
+            transform: scale(1.25);
+            box-shadow: 0 0 12px currentColor;
+        }
+        .card {
+            background: #222;
             border-radius: 24px;
-            padding: 16px 12px 18px;
-            margin: 6px 0 14px;
-            border: 1px solid #2a2a4a;
+            padding: 30px 16px 24px;
+            min-height: 170px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: border 0.3s ease, box-shadow 0.4s ease;
+            touch-action: manipulation;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
         }
-        .grow-area .big-fruit {
-            font-size: 72px;
-            line-height: 1.1;
-            margin: 4px 0;
+        .word {
+            font-size: 42px;
+            font-weight: 700;
+            color: #f0f0f0;
+            user-select: none;
+            -webkit-user-select: none;
+            text-shadow: 0 0 20px rgba(255,255,255,0.05);
         }
-        .grow-area .stage-label {
-            font-size: 16px;
-            font-weight: 500;
-            color: #b0c8dd;
-            margin-top: 2px;
+        .meaning {
+            font-size: 20px;
+            color: #8892b0;
+            margin-top: 12px;
+            min-height: 30px;
+            opacity: 0;
+            transition: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .grow-area .progress-text {
-            font-size: 13px;
-            color: #6a8aaa;
-            margin-top: 4px;
+        .meaning.show {
+            opacity: 1;
         }
-        .grow-area .timer-display {
-            font-size: 40px;
-            font-weight: 300;
-            letter-spacing: 2px;
-            color: #e8f0f8;
-            margin: 8px 0 6px;
-            font-variant-numeric: tabular-nums;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #2a2a4a;
-            border-radius: 10px;
-            margin: 8px 0 12px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: #6a9ec8;
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-
         .btn-group {
             display: flex;
             gap: 10px;
-            justify-content: center;
+            margin-top: 18px;
             flex-wrap: wrap;
         }
         .btn {
+            flex: 1;
             border: none;
             border-radius: 60px;
-            padding: 12px 26px;
-            font-size: 15px;
+            padding: 14px 16px;
+            font-size: 16px;
             font-weight: 600;
-            color: white;
+            color: #fff;
             cursor: pointer;
-            transition: all 0.15s ease;
-            flex: 1;
+            transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
             min-width: 80px;
-            touch-action: manipulation;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
-        .btn:active { transform: scale(0.94); }
-        .btn-start { background: #3a7db0; }
-        .btn-start:active { background: #2a6b9e; }
-        .btn-pause { background: #b8a040; }
-        .btn-pause:active { background: #9a8830; }
-        .btn-done { background: #4a8a6a; }
-        .btn-done:active { background: #3a7a5a; }
-        .btn-reset { background: #5a3a4a; }
-        .btn-reset:active { background: #4a2a3a; }
-        .btn:disabled { opacity: 0.35; pointer-events: none; }
-
-        /* ===== 统计版 ===== */
-        .stats-section {
-            margin-top: 20px;
-            border-top: 1px solid #2a2a4a;
-            padding-top: 16px;
+        .btn:active {
+            transform: scale(0.95);
         }
-        .stats-title {
-            font-size: 14px;
-            font-weight: 500;
-            color: #6a8aaa;
-            margin-bottom: 10px;
-            letter-spacing: 0.3px;
+        .btn-primary {
+            background: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
         }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
+        .btn-secondary {
+            background: #2a3a5e;
         }
-        .stats-cell {
-            background: #12122a;
-            border-radius: 10px;
-            padding: 8px 2px;
-            text-align: center;
-            aspect-ratio: 1 / 1.05;
+        .btn-success {
+            background: #1a7a5a;
+        }
+        .add-area {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #1e1e3a;
-            transition: all 0.2s ease;
-        }
-        .stats-cell .s-icon {
-            font-size: 26px;
-            line-height: 1.1;
-        }
-        .stats-cell .s-date {
-            font-size: 9px;
-            color: #5a7a9a;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-        .stats-cell .s-name {
-            font-size: 8px;
-            color: #8aaccc;
-            margin-top: 1px;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .stats-cell.empty {
-            opacity: 0.2;
-        }
-        .stats-cell .s-duration {
-            font-size: 8px;
-            color: #4a6a8a;
-            margin-top: 1px;
-        }
-
-        .no-stats {
-            color: #4a6a8a;
-            font-size: 14px;
-            text-align: center;
-            padding: 20px 0;
-            font-style: italic;
-        }
-
-        /* ===== 命名弹窗 ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            padding: 24px;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal {
-            background: #1a1a2e;
-            border-radius: 32px;
-            padding: 32px 24px 28px;
-            max-width: 360px;
-            width: 100%;
-            border: 1px solid #2a2a4a;
-            text-align: center;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.9);
-        }
-        .modal .m-icon { font-size: 56px; display: block; margin-bottom: 8px; }
-        .modal .m-title { font-size: 20px; font-weight: 600; color: #e8eef5; margin-bottom: 4px; }
-        .modal .m-sub { font-size: 14px; color: #8aaccc; margin-bottom: 16px; }
-        .modal input {
-            width: 100%;
-            padding: 14px 18px;
-            border-radius: 40px;
-            border: 1px solid #2a3a5e;
-            background: #0f0f1a;
-            color: #e8eef5;
-            font-size: 16px;
-            outline: none;
-            text-align: center;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-        .modal input:focus { border-color: #6a9ec8; }
-        .modal .m-btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 18px;
-        }
-        .modal .m-btn {
-            flex: 1;
-            border: none;
-            border-radius: 60px;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            touch-action: manipulation;
-        }
-        .modal .m-btn:active { transform: scale(0.95); }
-        .modal .m-btn.confirm { background: #4a8a6a; }
-        .modal .m-btn.confirm:active { background: #3a7a5a; }
-        .modal .m-btn.cancel { background: #5a3a4a; }
-        .modal .m-btn.cancel:active { background: #4a2a3a; }
-
-        .footer-note {
-            text-align: center;
-            font-size: 11px;
-            color: #3a5a7a;
+            gap: 8px;
             margin-top: 16px;
-            letter-spacing: 0.3px;
+            flex-wrap: wrap;
         }
-
-        @media (max-width: 420px) {
-            .fruit-card .icon { font-size: 28px; }
-            .grow-area .big-fruit { font-size: 56px; }
-            .grow-area .timer-display { font-size: 32px; }
-            .btn { font-size: 13px; padding: 10px 18px; }
-            .stats-cell .s-icon { font-size: 20px; }
+        .add-area input {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #2a3a5e;
+            background: #111;
+            color: #e0e0e0;
+            font-size: 15px;
+            outline: none;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+            touch-action: manipulation;
+        }
+        .add-area input:focus {
+            border-color: #e94560;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.15);
+        }
+        .list-area {
+            margin-top: 16px;
+            max-height: 170px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 6px;
+            border-left: 4px solid #e94560;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+            touch-action: manipulation;
+        }
+        .list-item .w {
+            color: #f0f0f0;
+            font-weight: 500;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .list-item .m {
+            color: #8892b0;
+            font-size: 14px;
+            margin-left: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .list-item .del {
+            background: none;
+            border: none;
+            color: #b3384a;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 6px;
+            touch-action: manipulation;
+        }
+        .counter {
+            color: #5a6a8a;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 14px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .hint {
+            color: #3a4a6a;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 4px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .list-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .list-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .list-area::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 10px;
+        }
+        .swipe-hint {
+            text-align: center;
+            font-size: 13px;
+            color: #4a4a6a;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: color 0.3s ease;
+        }
+        .is-swiping .btn,
+        .is-swiping .dot,
+        .is-swiping .list-item .del,
+        .is-swiping .add-area input,
+        .is-swiping .add-area button {
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-<div class="app" id="app">
-    <!-- 头部 -->
-    <div class="header">
-        <h1>🌳 日果</h1>
-        <span class="date-badge" id="todayBadge"></span>
-    </div>
-
-    <!-- 水果选择区 -->
-    <div class="fruit-grid" id="fruitGrid"></div>
-
-    <!-- 种植区 -->
-    <div class="grow-area" id="growArea">
-        <div class="big-fruit" id="bigFruit">🌱</div>
-        <div class="stage-label" id="stageLabel">等待开始</div>
-        <div class="progress-text" id="progressText">0 / 5 小时</div>
-        <div class="timer-display" id="timerDisplay">00:00:00</div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="btn-group">
-            <button class="btn btn-start" id="startBtn">▶ 开始</button>
-            <button class="btn btn-pause" id="pauseBtn" disabled>⏸ 暂停</button>
-            <button class="btn btn-done" id="doneBtn" disabled>✔ 完毕</button>
-        </div>
-    </div>
-
-    <!-- 统计版 -->
-    <div class="stats-section">
-        <div class="stats-title">📋 果园日记</div>
-        <div class="stats-grid" id="statsGrid"></div>
-    </div>
-
-    <div class="footer-note">每天一种 · 五小时成熟 · 种下即成长</div>
-</div>
-
-<!-- ===== 命名弹窗 ===== -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-        <span class="m-icon" id="modalIcon">🍎</span>
-        <div class="m-title" id="modalTitle">果实成熟了！</div>
-        <div class="m-sub" id="modalSub">给它起个名字吧</div>
-        <input type="text" id="modalInput" placeholder="输入名字..." maxlength="20" autocomplete="off">
-        <div class="m-btn-group">
-            <button class="m-btn cancel" id="modalCancel">跳过</button>
-            <button class="m-btn confirm" id="modalConfirm">✔ 命名</button>
-        </div>
+<div class="app-wrapper" id="appWrapper">
+    <div class="app-slider" id="appSlider">
+        <!-- 由 JavaScript 动态生成五个页面 -->
     </div>
 </div>
 
 <script>
-    // ================================================================
-    // 1. 水果配置
-    // ================================================================
-    const FRUITS = [
-        { id: 'apple',  emoji: '🍎', name: '苹果', color: '#e84a4a' },
-        { id: 'pear',   emoji: '🍐', name: '雪梨', color: '#c8b84a' },
-        { id: 'orange', emoji: '🍊', name: '橙子', color: '#f0a030' },
-        { id: 'peach',  emoji: '🍑', name: '蜜桃', color: '#f0a0a0' },
-        { id: 'strawberry', emoji: '🍓', name: '草莓', color: '#e84a4a' }
+(function() {
+    // ============================================================
+    // 0. 音效系统（带参数）
+    // ============================================================
+    let audioCtx = null;
+
+    function playSound(options) {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const defaultOptions = {
+                frequency: 800,
+                type: 'square',
+                volume: 0.08,
+                duration: 0.06,
+                delay: 0,
+                secondFreq: 1200,
+                secondVolume: 0.03,
+                secondDuration: 0.04,
+                secondDelay: 0.01
+            };
+            const opts = Object.assign({}, defaultOptions, options);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = opts.type;
+            osc.frequency.value = opts.frequency;
+            gain.gain.setValueAtTime(opts.volume, audioCtx.currentTime + opts.delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + opts.delay + opts.duration);
+            osc.start(audioCtx.currentTime + opts.delay);
+            osc.stop(audioCtx.currentTime + opts.delay + opts.duration + 0.01);
+            if (opts.secondFreq) {
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.value = opts.secondFreq;
+                gain2.gain.setValueAtTime(opts.secondVolume, audioCtx.currentTime + opts.secondDelay);
+                gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + opts.secondDelay + opts.secondDuration);
+                osc2.start(audioCtx.currentTime + opts.secondDelay);
+                osc2.stop(audioCtx.currentTime + opts.secondDelay + opts.secondDuration + 0.01);
+            }
+        } catch (e) {}
+    }
+
+    function playDrawSound(libIndex) {
+        const presets = [
+            { frequency: 600, type: 'square', secondFreq: 1000, volume: 0.07 },
+            { frequency: 800, type: 'sawtooth', secondFreq: 1200, volume: 0.08 },
+            { frequency: 1000, type: 'sine', secondFreq: 1400, volume: 0.06 },
+            { frequency: 1200, type: 'square', secondFreq: 1600, volume: 0.07 },
+            { frequency: 1400, type: 'sine', secondFreq: 1800, volume: 0.05 }
+        ];
+        const preset = presets[libIndex % presets.length];
+        playSound({
+            frequency: preset.frequency,
+            type: preset.type,
+            secondFreq: preset.secondFreq,
+            volume: preset.volume,
+            duration: 0.07,
+            secondDuration: 0.05,
+            secondVolume: 0.03
+        });
+    }
+
+    function playSwipeSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const bufferSize = audioCtx.sampleRate * 0.05;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 8);
+            }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start(audioCtx.currentTime);
+            noise.stop(audioCtx.currentTime + 0.06);
+        } catch (e) {}
+    }
+
+    // ============================================================
+    // 1. 词库配置
+    // ============================================================
+    const LIBRARIES = [
+        { id: 'hunter', name: '猎兽黑红', accent: '#e94560', glow: 'rgba(233, 69, 96, 0.5)' },
+        { id: 'sunset', name: '夕彩赤黄', accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' },
+        { id: 'forest', name: '荫萌翠绿', accent: '#10b981', glow: 'rgba(16, 185, 129, 0.5)' },
+        { id: 'sky', name: '碧空蔚蓝', accent: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+        { id: 'violet', name: '罗兰紫色', accent: '#a855f7', glow: 'rgba(168, 85, 247, 0.5)' }
     ];
 
-    // 成长阶段 (0~5)
-    const STAGES = [
-        { label: '种子', emoji: '🌱', min: 0 },
-        { label: '青涩', emoji: '🌿', min: 0.5 },
-        { label: '半熟', emoji: '🌱', min: 1 },
-        { label: '饱满', emoji: '🌳', min: 2 },
-        { label: '鲜艳', emoji: '🌳', min: 3 },
-        { label: '成熟', emoji: '🎉', min: 5 }
-    ];
+    const STORAGE_KEY = 'five_libraries_data';
 
-    // ================================================================
-    // 2. 存储
-    // ================================================================
-    const STORAGE_KEY = 'orchard_data';
-
-    function loadData() {
+    // ============================================================
+    // 2. 数据管理
+    // ============================================================
+    function loadAllData() {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) {
-                const d = JSON.parse(raw);
-                // 确保有 stats 数组
-                if (!d.stats) d.stats = [];
-                return d;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length === LIBRARIES.length) {
+                    return LIBRARIES.map((lib, idx) => {
+                        const saved = parsed[idx] || {};
+                        return { ...lib, words: Array.isArray(saved.words) ? saved.words : [] };
+                    });
+                }
             }
         } catch (_) {}
-        return {
-            // 当前种植状态
-            currentFruit: null,        // 'apple' 等
-            startTime: null,           // 时间戳 (毫秒)
-            accumulated: 0,            // 已累计秒数
-            isPaused: true,
-            isDone: false,
-            // 今日是否已种
-            todayFruit: null,          // 今天种了什么水果
-            todayDate: null,           // '2026-08-06'
-            // 统计版
-            stats: []                  // { date, fruitId, name, duration, stage }
-        };
+        return LIBRARIES.map((lib, idx) => ({
+            ...lib,
+            words: idx === 0 ? [
+                { word: 'apple', meaning: '苹果' },
+                { word: 'book', meaning: '书' },
+                { word: 'cat', meaning: '猫' }
+            ] : [
+                { word: 'sample', meaning: '示例' },
+                { word: 'test', meaning: '测试' }
+            ]
+        }));
     }
 
-    function saveData(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    function saveAllData(libs) {
+        const toSave = libs.map(lib => ({ id: lib.id, name: lib.name, words: lib.words || [] }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     }
 
-    // ================================================================
-    // 3. 工具
-    // ================================================================
-    function getToday() {
-        const d = new Date();
-        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
+    let libraries = loadAllData();
+    let currentIndex = 0;
+    let lastDrawnMap = {};
+    let drawCountMap = {};
 
-    function formatDate(dateStr) {
-        const parts = dateStr.split('-');
-        return parts[1] + '/' + parts[2];
-    }
+    // ============================================================
+    // 3. DOM 构建
+    // ============================================================
+    const slider = document.getElementById('appSlider');
+    const wrapper = document.getElementById('appWrapper');
+    const pageRefs = [];
 
-    function formatDuration(seconds) {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    }
-
-    function getStage(seconds) {
-        const hours = seconds / 3600;
-        for (let i = STAGES.length - 1; i >= 0; i--) {
-            if (hours >= STAGES[i].min) return i;
-        }
-        return 0;
-    }
-
-    function getStageLabel(seconds) {
-        const idx = getStage(seconds);
-        return STAGES[idx].label + ' · ' + (seconds/3600).toFixed(1) + 'h';
-    }
-
-    function getStageEmoji(seconds) {
-        const idx = getStage(seconds);
-        return STAGES[idx].emoji;
-    }
-
-    function getFruitById(id) {
-        return FRUITS.find(f => f.id === id);
-    }
-
-    // ================================================================
-    // 4. 主逻辑
-    // ================================================================
-    let data = loadData();
-    let timerInterval = null;
-    let isRunning = false;
-    let pendingFruitId = null; // 用于弹窗
-
-    const today = getToday();
-
-    // ---- DOM 引用 ----
-    const fruitGrid = document.getElementById('fruitGrid');
-    const bigFruit = document.getElementById('bigFruit');
-    const stageLabel = document.getElementById('stageLabel');
-    const progressText = document.getElementById('progressText');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const progressFill = document.getElementById('progressFill');
-    const startBtn = document.getElementById('startBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const doneBtn = document.getElementById('doneBtn');
-    const statsGrid = document.getElementById('statsGrid');
-    const todayBadge = document.getElementById('todayBadge');
-    const modalOverlay = document.getElementById('modalOverlay');
-    const modalIcon = document.getElementById('modalIcon');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalSub = document.getElementById('modalSub');
-    const modalInput = document.getElementById('modalInput');
-    const modalConfirm = document.getElementById('modalConfirm');
-    const modalCancel = document.getElementById('modalCancel');
-
-    // ---- 初始化 ----
-    function init() {
-        // 检查是否新的一天
-        if (data.todayDate !== today) {
-            // 新的一天，重置今日种植状态
-            data.todayFruit = null;
-            data.todayDate = today;
-            // 如果有未完成的种植，且未完成，保留？按照设计，跨天不保留，但数据还在。
-            // 我们保留 currentFruit 但标记为过期？
-            // 策略：如果跨天且当前有未完成的水果，我们仍保留它，但今天不能再选新的。
-            // 但实际上：只要今天还没种，就可以选。
-            // 如果 data.todayFruit 为空，则允许选择。
-            // 如果 data.currentFruit 存在但 todayFruit 为空，说明是旧数据，我们清理掉。
-            if (!data.todayFruit) {
-                // 重置当前种植
-                data.currentFruit = null;
-                data.startTime = null;
-                data.accumulated = 0;
-                data.isPaused = true;
-                data.isDone = false;
-            }
-            saveData(data);
-        }
-
-        // 如果今天已经种了，锁定选择
-        renderFruitGrid();
-        renderStats();
-        updateGrowArea();
-        updateTimerDisplay();
-        updateProgress();
-        todayBadge.textContent = formatDate(today);
-
-        // 如果当前有种植且未完成，恢复计时
-        if (data.currentFruit && !data.isDone) {
-            // 计算已流逝时间
-            if (!data.isPaused && data.startTime) {
-                const elapsed = (Date.now() - data.startTime) / 1000;
-                data.accumulated += elapsed;
-                data.startTime = Date.now();
-                saveData(data);
-            }
-            // 检查是否超过5小时
-            checkCompletion();
-            updateGrowArea();
-        }
-    }
-
-    // ---- 渲染水果选择 ----
-    function renderFruitGrid() {
-        fruitGrid.innerHTML = '';
-        const todayLocked = data.todayFruit !== null;
-        FRUITS.forEach(f => {
-            const card = document.createElement('div');
-            card.className = 'fruit-card';
-            if (data.currentFruit === f.id && !data.isDone) {
-                card.classList.add('selected');
-            }
-            if (todayLocked && data.todayFruit !== f.id) {
-                card.classList.add('locked');
-            }
-            // 如果今天已经种了这个水果且已完成，显示勾
-            const isTodayDone = data.stats.some(s => s.date === today && s.fruitId === f.id);
-            card.innerHTML = `
-                <div class="icon">${f.emoji}</div>
-                <div class="label">${f.name}</div>
-                <div class="status">${isTodayDone ? '✅ 已收' : ''}</div>
-                ${isTodayDone ? '<div class="check-mark">✓</div>' : ''}
+    function buildPages() {
+        slider.innerHTML = '';
+        pageRefs.length = 0;
+        libraries.forEach((lib, idx) => {
+            const page = document.createElement('div');
+            page.className = 'app-page';
+            page.dataset.index = idx;
+            page.innerHTML = `
+                <div class="glow" id="glowTop-${idx}"></div>
+                <div class="glow-bottom" id="glowBottom-${idx}"></div>
+                <div class="header">
+                    <div class="lib-name" id="libName-${idx}">${lib.name}</div>
+                    <div class="dots" id="dots-${idx}"></div>
+                </div>
+                <div class="card" id="cardArea-${idx}">
+                    <div class="word" id="wordDisplay-${idx}">🎲</div>
+                    <div class="meaning" id="meaningDisplay-${idx}">点「抽」开始</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="drawBtn-${idx}">🎲 抽</button>
+                    <button class="btn btn-secondary" id="revealBtn-${idx}">👁 释义</button>
+                </div>
+                <div class="add-area">
+                    <input id="wordInput-${idx}" placeholder="英文" maxlength="50">
+                    <input id="meaningInput-${idx}" placeholder="释义" maxlength="50">
+                    <button class="btn btn-success" id="addBtn-${idx}" style="flex:0.6;min-width:60px">➕</button>
+                </div>
+                <div class="list-area" id="listArea-${idx}"></div>
+                <div class="counter" id="counter-${idx}">共 0 个词 · 已抽 0 次</div>
+                <div class="hint">✕ 删除 · 左右滑动切换词库</div>
+                <div class="swipe-hint" id="swipeHint-${idx}">← 滑动切换 →</div>
             `;
-            if (!todayLocked || data.todayFruit === f.id) {
-                card.addEventListener('click', () => selectFruit(f.id));
+            slider.appendChild(page);
+            pageRefs.push(page);
+        });
+        libraries.forEach((lib, idx) => {
+            if (!lastDrawnMap[lib.id]) lastDrawnMap[lib.id] = -1;
+            if (!drawCountMap[lib.id]) drawCountMap[lib.id] = 0;
+            const page = pageRefs[idx];
+            page._lib = lib;
+            page._idx = idx;
+            page._glowTop = page.querySelector(`#glowTop-${idx}`);
+            page._glowBottom = page.querySelector(`#glowBottom-${idx}`);
+            page._libName = page.querySelector(`#libName-${idx}`);
+            page._dots = page.querySelector(`#dots-${idx}`);
+            page._cardArea = page.querySelector(`#cardArea-${idx}`);
+            page._word = page.querySelector(`#wordDisplay-${idx}`);
+            page._meaning = page.querySelector(`#meaningDisplay-${idx}`);
+            page._list = page.querySelector(`#listArea-${idx}`);
+            page._counter = page.querySelector(`#counter-${idx}`);
+            page._wordInput = page.querySelector(`#wordInput-${idx}`);
+            page._meaningInput = page.querySelector(`#meaningInput-${idx}`);
+            page._drawBtn = page.querySelector(`#drawBtn-${idx}`);
+            page._revealBtn = page.querySelector(`#revealBtn-${idx}`);
+            page._addBtn = page.querySelector(`#addBtn-${idx}`);
+            page._swipeHint = page.querySelector(`#swipeHint-${idx}`);
+            applyThemeToPage(page, lib, idx);
+            renderDotsForPage(page, lib, idx);
+            renderListForPage(page, lib, idx);
+            updateCounterForPage(page, lib, idx);
+            drawCardForPage(page, lib, idx);
+            bindPageEvents(page, lib, idx);
+        });
+        goToLibrary(currentIndex, false);
+    }
+
+    // ============================================================
+    // 4. 主题应用
+    // ============================================================
+    function applyThemeToPage(page, lib, idx) {
+        const accent = lib.accent;
+        const glow = lib.glow;
+        page._glowTop.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
+        page._glowBottom.style.background = `radial-gradient(circle, ${glow}, transparent 70%)`;
+        page._glowTop.style.opacity = '0.35';
+        page._glowBottom.style.opacity = '0.2';
+        page._libName.style.color = '#f0f0f0';
+        page._cardArea.style.border = `1px solid ${accent}55`;
+        page._cardArea.style.boxShadow = `0 0 40px ${accent}22, inset 0 0 30px ${accent}11`;
+        page._drawBtn.style.background = accent;
+        page._drawBtn.style.boxShadow = `0 0 30px ${accent}44`;
+        const total = libraries.length;
+        const hint = (idx === 0) ? '→ 滑动切换' :
+                     (idx === total - 1) ? '← 滑动切换' :
+                     '← 滑动切换 →';
+        page._swipeHint.textContent = hint;
+        page._swipeHint.style.color = `${accent}77`;
+    }
+
+    function renderDotsForPage(page, lib, idx) {
+        const container = page._dots;
+        let html = '';
+        libraries.forEach((_, i) => {
+            const active = (i === idx) ? 'active' : '';
+            html += `<div class="dot ${active}" data-index="${i}" data-pageidx="${idx}"></div>`;
+        });
+        container.innerHTML = html;
+        container.querySelectorAll('.dot').forEach(dot => {
+            dot.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const targetIdx = parseInt(this.getAttribute('data-index'), 10);
+                if (!isNaN(targetIdx) && targetIdx !== currentIndex) {
+                    goToLibrary(targetIdx, true);
+                }
+            });
+        });
+        container.querySelectorAll('.dot').forEach((dot, i) => {
+            const accent = libraries[i].accent;
+            dot.style.color = accent;
+            if (i === idx) {
+                dot.style.background = accent;
+                dot.style.boxShadow = `0 0 16px ${accent}66`;
+            } else {
+                dot.style.background = '#3a3a5a';
+                dot.style.boxShadow = 'none';
             }
-            fruitGrid.appendChild(card);
         });
     }
 
-    function selectFruit(id) {
-        if (data.isDone) return;
-        if (data.todayFruit && data.todayFruit !== id) {
-            // 今天已经种了别的水果
-            return;
-        }
-        // 如果当前正在种植，切换水果会丢失进度，需要确认
-        if (data.currentFruit && data.currentFruit !== id && data.accumulated > 0) {
-            if (!confirm('切换水果将丢失当前进度，确定吗？')) return;
-        }
-        // 重置当前种植
-        data.currentFruit = id;
-        data.startTime = null;
-        data.accumulated = 0;
-        data.isPaused = true;
-        data.isDone = false;
-        data.todayFruit = id;
-        data.todayDate = today;
-        saveData(data);
-        renderFruitGrid();
-        updateGrowArea();
-        updateTimerDisplay();
-        updateProgress();
-        clearInterval(timerInterval);
-        isRunning = false;
-        startBtn.textContent = '▶ 开始';
-        pauseBtn.disabled = true;
-        doneBtn.disabled = true;
-    }
-
-    // ---- 种植区更新 ----
-    function updateGrowArea() {
-        if (!data.currentFruit || data.isDone) {
-            const fruit = data.currentFruit ? getFruitById(data.currentFruit) : null;
-            if (data.isDone && fruit) {
-                bigFruit.textContent = fruit.emoji;
-                stageLabel.textContent = '✅ 已收获';
-                progressText.textContent = '5 / 5 小时';
-            } else {
-                bigFruit.textContent = '🌱';
-                stageLabel.textContent = '选择一种水果开始';
-                progressText.textContent = '0 / 5 小时';
-            }
-            return;
-        }
-        const fruit = getFruitById(data.currentFruit);
-        if (!fruit) return;
-        const seconds = data.accumulated;
-        const stageIdx = getStage(seconds);
-        bigFruit.textContent = fruit.emoji;
-        stageLabel.textContent = STAGES[stageIdx].label + ' · ' + (seconds/3600).toFixed(1) + 'h';
-        progressText.textContent = Math.min(seconds/3600, 5).toFixed(1) + ' / 5 小时';
-        // 如果已满5小时
-        if (seconds >= 5 * 3600) {
-            stageLabel.textContent = '🎉 成熟了！';
-            progressText.textContent = '5 / 5 小时';
-        }
-    }
-
-    function updateTimerDisplay() {
-        if (!data.currentFruit || data.isDone) {
-            timerDisplay.textContent = '00:00:00';
-            return;
-        }
-        let seconds = data.accumulated;
-        if (!data.isPaused && data.startTime) {
-            seconds += (Date.now() - data.startTime) / 1000;
-        }
-        if (seconds > 5 * 3600) seconds = 5 * 3600;
-        timerDisplay.textContent = formatDuration(Math.floor(seconds));
-    }
-
-    function updateProgress() {
-        if (!data.currentFruit || data.isDone) {
-            progressFill.style.width = '0%';
-            return;
-        }
-        let seconds = data.accumulated;
-        if (!data.isPaused && data.startTime) {
-            seconds += (Date.now() - data.startTime) / 1000;
-        }
-        const pct = Math.min((seconds / (5 * 3600)) * 100, 100);
-        progressFill.style.width = pct + '%';
-    }
-
-    // ---- 计时控制 ----
-    function startTimer() {
-        if (!data.currentFruit || data.isDone) return;
-        if (data.accumulated >= 5 * 3600) {
-            // 已满，触发完成
-            completeFruit();
-            return;
-        }
-        if (!data.isPaused) return;
-        data.isPaused = false;
-        data.startTime = Date.now();
-        saveData(data);
-        isRunning = true;
-        startBtn.textContent = '⏳ 生长中';
-        startBtn.disabled = true;
-        pauseBtn.disabled = false;
-        doneBtn.disabled = false;
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            updateTimerDisplay();
-            updateProgress();
-            updateGrowArea();
-            // 检查是否满5小时
-            let sec = data.accumulated;
-            if (!data.isPaused && data.startTime) {
-                sec += (Date.now() - data.startTime) / 1000;
-            }
-            if (sec >= 5 * 3600) {
-                clearInterval(timerInterval);
-                isRunning = false;
-                completeFruit();
-            }
-        }, 500);
-    }
-
-    function pauseTimer() {
-        if (!data.currentFruit || data.isDone) return;
-        if (data.isPaused) return;
-        // 累计时间
-        if (data.startTime) {
-            data.accumulated += (Date.now() - data.startTime) / 1000;
-            data.startTime = null;
-        }
-        data.isPaused = true;
-        saveData(data);
-        isRunning = false;
-        clearInterval(timerInterval);
-        startBtn.textContent = '▶ 继续';
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-        updateTimerDisplay();
-        updateProgress();
-        updateGrowArea();
-    }
-
-    function resetTimer() {
-        if (!data.currentFruit) return;
-        if (data.accumulated === 0 && data.isPaused) {
-            // 没开始过，直接重置选择
-            data.currentFruit = null;
-            data.todayFruit = null;
-            saveData(data);
-            renderFruitGrid();
-            updateGrowArea();
-            updateTimerDisplay();
-            updateProgress();
-            return;
-        }
-        if (!confirm('重置将丢失当前进度，确定吗？')) return;
-        clearInterval(timerInterval);
-        isRunning = false;
-        data.accumulated = 0;
-        data.startTime = null;
-        data.isPaused = true;
-        data.isDone = false;
-        saveData(data);
-        startBtn.textContent = '▶ 开始';
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-        doneBtn.disabled = true;
-        updateGrowArea();
-        updateTimerDisplay();
-        updateProgress();
-    }
-
-    // ---- 完成 ----
-    function completeFruit() {
-        if (!data.currentFruit) return;
-        if (data.isDone) return;
-        // 确保累计时间达到5小时
-        if (data.accumulated < 5 * 3600) {
-            // 补足
-            data.accumulated = 5 * 3600;
-        }
-        data.isDone = true;
-        data.isPaused = true;
-        data.startTime = null;
-        clearInterval(timerInterval);
-        isRunning = false;
-        saveData(data);
-
-        // 弹出命名窗口
-        const fruit = getFruitById(data.currentFruit);
-        modalIcon.textContent = fruit.emoji;
-        modalTitle.textContent = '🎉 果实成熟了！';
-        modalSub.textContent = '给它起一个名字吧';
-        modalInput.value = '';
-        modalInput.placeholder = '输入名字...';
-        pendingFruitId = data.currentFruit;
-        modalOverlay.classList.add('show');
-        setTimeout(() => modalInput.focus(), 300);
-        // 按钮状态
-        startBtn.textContent = '▶ 开始';
-        startBtn.disabled = true;
-        pauseBtn.disabled = true;
-        doneBtn.disabled = true;
-    }
-
-    function confirmName() {
-        const name = modalInput.value.trim() || '无名果';
-        if (pendingFruitId) {
-            // 记录到统计
-            const record = {
-                date: today,
-                fruitId: pendingFruitId,
-                name: name,
-                duration: Math.floor(data.accumulated),
-                stage: 5
-            };
-            // 检查今天是否已有记录，防止重复
-            const existing = data.stats.some(s => s.date === today && s.fruitId === pendingFruitId);
-            if (!existing) {
-                data.stats.push(record);
-                saveData(data);
-            }
-            // 重置种植状态
-            data.currentFruit = null;
-            data.todayFruit = null;
-            data.accumulated = 0;
-            data.startTime = null;
-            data.isPaused = true;
-            data.isDone = false;
-            data.todayDate = today;
-            saveData(data);
-            pendingFruitId = null;
-            modalOverlay.classList.remove('show');
-            renderFruitGrid();
-            renderStats();
-            updateGrowArea();
-            updateTimerDisplay();
-            updateProgress();
-            startBtn.textContent = '▶ 开始';
-            startBtn.disabled = false;
-            pauseBtn.disabled = true;
-            doneBtn.disabled = true;
-        }
-    }
-
-    function cancelName() {
-        // 跳过命名，使用默认名
-        if (pendingFruitId) {
-            const record = {
-                date: today,
-                fruitId: pendingFruitId,
-                name: '无名果',
-                duration: Math.floor(data.accumulated),
-                stage: 5
-            };
-            const existing = data.stats.some(s => s.date === today && s.fruitId === pendingFruitId);
-            if (!existing) {
-                data.stats.push(record);
-                saveData(data);
-            }
-            data.currentFruit = null;
-            data.todayFruit = null;
-            data.accumulated = 0;
-            data.startTime = null;
-            data.isPaused = true;
-            data.isDone = false;
-            data.todayDate = today;
-            saveData(data);
-            pendingFruitId = null;
-            modalOverlay.classList.remove('show');
-            renderFruitGrid();
-            renderStats();
-            updateGrowArea();
-            updateTimerDisplay();
-            updateProgress();
-            startBtn.textContent = '▶ 开始';
-            startBtn.disabled = false;
-            pauseBtn.disabled = true;
-            doneBtn.disabled = true;
-        }
-    }
-
-    // ---- 检查是否已完成 ----
-    function checkCompletion() {
-        if (!data.currentFruit) return;
-        if (data.isDone) return;
-        if (data.accumulated >= 5 * 3600) {
-            completeFruit();
-        }
-    }
-
-    // ---- 统计版 ----
-    function renderStats() {
-        const sorted = [...data.stats].reverse(); // 最新在前
-        if (sorted.length === 0) {
-            statsGrid.innerHTML = '<div class="no-stats" style="grid-column:1/-1;">还没有收获，去种一颗吧</div>';
+    function renderListForPage(page, lib, idx) {
+        const words = lib.words || [];
+        const container = page._list;
+        const accent = lib.accent;
+        if (words.length === 0) {
+            container.innerHTML = '<div style="color:#4a5a7a;text-align:center;padding:16px;font-size:14px">还没有词，添加一些吧</div>';
             return;
         }
         let html = '';
-        sorted.forEach(record => {
-            const fruit = getFruitById(record.fruitId);
-            const emoji = fruit ? fruit.emoji : '🍎';
-            const dateStr = formatDate(record.date);
-            const dur = record.duration || 0;
-            const durStr = Math.floor(dur/3600) + 'h' + Math.floor((dur%3600)/60) + 'm';
-            html += `
-                <div class="stats-cell">
-                    <div class="s-icon">${emoji}</div>
-                    <div class="s-date">${dateStr}</div>
-                    <div class="s-name">${record.name || '无名'}</div>
-                    <div class="s-duration">${durStr}</div>
-                </div>
-            `;
+        words.forEach((item, i) => {
+            html += `<div class="list-item" style="border-left-color:${accent};">
+                <span><span class="w">${esc(item.word)}</span><span class="m">${esc(item.meaning)}</span></span>
+                <button class="del" data-index="${i}" data-pageidx="${idx}">✕</button>
+            </div>`;
         });
-        statsGrid.innerHTML = html;
+        container.innerHTML = html;
+        container.querySelectorAll('.del').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const wordIdx = parseInt(this.getAttribute('data-index'), 10);
+                const pageIdx = parseInt(this.getAttribute('data-pageidx'), 10);
+                if (!isNaN(wordIdx) && !isNaN(pageIdx)) {
+                    deleteWord(pageIdx, wordIdx);
+                }
+            });
+        });
     }
 
-    // ---- 事件绑定 ----
-    startBtn.addEventListener('click', startTimer);
-    pauseBtn.addEventListener('click', pauseTimer);
-    doneBtn.addEventListener('click', function() {
-        if (!data.currentFruit || data.isDone) return;
-        // 手动完成：不管多久，确认后写名字
-        if (data.accumulated < 0.5 * 3600) {
-            if (!confirm('才种了不到半小时，确定要收获吗？')) return;
-        }
-        // 锁定当前进度
-        data.isDone = true;
-        data.isPaused = true;
-        data.startTime = null;
-        clearInterval(timerInterval);
-        isRunning = false;
-        saveData(data);
-        const fruit = getFruitById(data.currentFruit);
-        modalIcon.textContent = fruit.emoji;
-        modalTitle.textContent = '🌱 收获时刻';
-        modalSub.textContent = '给它起一个名字吧';
-        modalInput.value = '';
-        modalInput.placeholder = '输入名字...';
-        pendingFruitId = data.currentFruit;
-        modalOverlay.classList.add('show');
-        setTimeout(() => modalInput.focus(), 300);
-        startBtn.textContent = '▶ 开始';
-        startBtn.disabled = true;
-        pauseBtn.disabled = true;
-        doneBtn.disabled = true;
-    });
-
-    modalConfirm.addEventListener('click', confirmName);
-    modalCancel.addEventListener('click', cancelName);
-    modalInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') confirmName();
-        if (e.key === 'Escape') cancelName();
-    });
-
-    // 点击外部关闭弹窗（但不触发确认）
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) {
-            // 不关闭，必须通过按钮
-        }
-    });
-
-    // ---- 恢复计时器循环 ----
-    function tickLoop() {
-        if (!data.currentFruit || data.isDone) return;
-        if (!data.isPaused) {
-            updateTimerDisplay();
-            updateProgress();
-            updateGrowArea();
-            // 检查是否满5小时
-            let sec = data.accumulated;
-            if (!data.isPaused && data.startTime) {
-                sec += (Date.now() - data.startTime) / 1000;
-            }
-            if (sec >= 5 * 3600) {
-                clearInterval(timerInterval);
-                isRunning = false;
-                completeFruit();
-            }
-        }
-        requestAnimationFrame(tickLoop);
+    function updateCounterForPage(page, lib, idx) {
+        const count = (lib.words || []).length;
+        const drawn = drawCountMap[lib.id] || 0;
+        page._counter.textContent = `共 ${count} 个词 · 已抽 ${drawn} 次`;
     }
 
-    // ---- 启动 ----
+    // ============================================================
+    // ★★★ 核心修复：抽新词时彻底关闭释义，无过渡残留 ★★★
+    // ============================================================
+    function drawCardForPage(page, lib, idx) {
+        const words = lib.words || [];
+        const wordEl = page._word;
+        const meaningEl = page._meaning;
+
+        // 播放当前词库对应的抽卡音效
+        playDrawSound(idx);
+
+        // ★★★ 强制关闭释义（瞬间，无过渡）★★★
+        meaningEl.classList.remove('show');
+        // 确保没有残留的过渡动画影响
+        meaningEl.style.transition = 'none';
+
+        if (words.length === 0) {
+            wordEl.textContent = '📭';
+            meaningEl.textContent = '词库为空，添加新词吧';
+            return;
+        }
+
+        let wordIdx;
+        const lastIdx = lastDrawnMap[lib.id] ?? -1;
+        if (words.length === 1) {
+            wordIdx = 0;
+        } else {
+            let attempts = 0;
+            do {
+                wordIdx = Math.floor(Math.random() * words.length);
+                attempts++;
+            } while (wordIdx === lastIdx && attempts < 20);
+        }
+        lastDrawnMap[lib.id] = wordIdx;
+        const word = words[wordIdx];
+        wordEl.textContent = word.word;
+        meaningEl.textContent = word.meaning;
+        // 确保释义是隐藏状态
+        meaningEl.classList.remove('show');
+        drawCountMap[lib.id] = (drawCountMap[lib.id] || 0) + 1;
+        updateCounterForPage(page, lib, idx);
+        wordEl.style.transition = 'none';
+        wordEl.style.opacity = '0.6';
+        setTimeout(() => {
+            wordEl.style.transition = 'opacity 0.15s ease';
+            wordEl.style.opacity = '1';
+        }, 10);
+        saveAllData(libraries);
+    }
+
+    // ============================================================
+    // 5. 事件绑定
+    // ============================================================
+    function bindPageEvents(page, lib, idx) {
+        page._drawBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            drawCardForPage(page, lib, idx);
+        });
+
+        page._revealBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const meaningEl = page._meaning;
+            if (meaningEl.classList.contains('show')) {
+                meaningEl.classList.remove('show');
+            } else {
+                const wordEl = page._word;
+                if (wordEl.textContent === '🎲' || wordEl.textContent === '📭') {
+                    drawCardForPage(page, lib, idx);
+                    // 抽完卡后立即显示释义（无过渡）
+                    setTimeout(() => { meaningEl.classList.add('show'); }, 50);
+                } else {
+                    meaningEl.classList.add('show');
+                }
+            }
+        });
+
+        page._cardArea.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const meaningEl = page._meaning;
+            if (meaningEl.classList.contains('show')) {
+                meaningEl.classList.remove('show');
+            } else {
+                const wordEl = page._word;
+                if (wordEl.textContent === '🎲' || wordEl.textContent === '📭') {
+                    drawCardForPage(page, lib, idx);
+                    setTimeout(() => { meaningEl.classList.add('show'); }, 50);
+                } else {
+                    meaningEl.classList.add('show');
+                }
+            }
+        });
+
+        page._addBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const w = page._wordInput.value.trim();
+            const m = page._meaningInput.value.trim();
+            if (!w || !m) { alert('请输入英文和释义'); return; }
+            if (lib.words.some(item => item.word.toLowerCase() === w.toLowerCase())) {
+                alert('这个词已存在');
+                return;
+            }
+            lib.words.push({ word: w, meaning: m });
+            saveAllData(libraries);
+            page._wordInput.value = '';
+            page._meaningInput.value = '';
+            renderListForPage(page, lib, idx);
+            updateCounterForPage(page, lib, idx);
+            drawCardForPage(page, lib, idx);
+        });
+
+        page._wordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                page._meaningInput.focus();
+            }
+        });
+        page._meaningInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                page._addBtn.click();
+            }
+        });
+    }
+
+    // ============================================================
+    // 6. 删除词
+    // ============================================================
+    function deleteWord(pageIdx, wordIdx) {
+        const lib = libraries[pageIdx];
+        if (!lib) return;
+        if (wordIdx < 0 || wordIdx >= lib.words.length) return;
+        if (confirm('删除 "' + lib.words[wordIdx].word + '" ？')) {
+            lib.words.splice(wordIdx, 1);
+            saveAllData(libraries);
+            const page = pageRefs[pageIdx];
+            if (page) {
+                renderListForPage(page, lib, pageIdx);
+                updateCounterForPage(page, lib, pageIdx);
+                if (lib.words.length > 0) {
+                    drawCardForPage(page, lib, pageIdx);
+                } else {
+                    page._word.textContent = '📭';
+                    page._meaning.textContent = '词库为空，添加新词吧';
+                    page._meaning.className = 'meaning';
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // 7. 切换词库（带专属滑动音效）
+    // ============================================================
+    let isAnimating = false;
+
+    function goToLibrary(index, animate = true) {
+        if (isAnimating) return;
+        if (index < 0) index = 0;
+        if (index >= libraries.length) index = libraries.length - 1;
+        if (index === currentIndex) {
+            slider.style.transition = animate ? 'transform 0.25s ease-out' : 'none';
+            slider.style.transform = `translateX(-${index * 100}%)`;
+            if (!animate) slider.style.transition = 'none';
+            return;
+        }
+        playSwipeSound();
+
+        isAnimating = true;
+        currentIndex = index;
+        slider.style.transition = animate ? 'transform 0.25s ease-out' : 'none';
+        slider.style.transform = `translateX(-${index * 100}%)`;
+        pageRefs.forEach((page, idx) => {
+            const dots = page._dots;
+            if (dots) {
+                dots.querySelectorAll('.dot').forEach((dot, i) => {
+                    const accent = libraries[i].accent;
+                    if (i === currentIndex) {
+                        dot.classList.add('active');
+                        dot.style.background = accent;
+                        dot.style.boxShadow = `0 0 16px ${accent}66`;
+                    } else {
+                        dot.classList.remove('active');
+                        dot.style.background = '#3a3a5a';
+                        dot.style.boxShadow = 'none';
+                    }
+                });
+            }
+        });
+        try { localStorage.setItem('current_lib_index', String(currentIndex)); } catch (_) {}
+        setTimeout(() => {
+            isAnimating = false;
+        }, 300);
+    }
+
+    // ============================================================
+    // 8. 手势滑动
+    // ============================================================
+    let startX = 0;
+    let startY = 0;
+    let startIndex = 0;
+    let isSwiping = false;
+    let swipeLock = false;
+
+    wrapper.addEventListener('touchstart', function(e) {
+        if (isAnimating || swipeLock) return;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startIndex = currentIndex;
+        isSwiping = false;
+        slider.style.transition = 'none';
+    }, { passive: true });
+
+    wrapper.addEventListener('touchmove', function(e) {
+        if (isAnimating || swipeLock) return;
+        if (e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+            e.preventDefault();
+            isSwiping = true;
+            const percent = (deltaX / wrapper.offsetWidth) * 100;
+            let newPercent = -startIndex * 100 + percent;
+            if (newPercent > 0) newPercent = 0;
+            if (newPercent < -(libraries.length - 1) * 100) newPercent = -(libraries.length - 1) * 100;
+            slider.style.transform = `translateX(${newPercent}%)`;
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend', function(e) {
+        if (!isSwiping || isAnimating || swipeLock) return;
+        const deltaX = e.changedTouches[0].clientX - startX;
+        const threshold = wrapper.offsetWidth * 0.15;
+        let targetIndex = startIndex;
+        if (deltaX < -threshold && startIndex < libraries.length - 1) {
+            targetIndex = startIndex + 1;
+        } else if (deltaX > threshold && startIndex > 0) {
+            targetIndex = startIndex - 1;
+        }
+        swipeLock = true;
+        goToLibrary(targetIndex, true);
+        setTimeout(() => {
+            swipeLock = false;
+        }, 300);
+        isSwiping = false;
+    }, { passive: true });
+
+    // ============================================================
+    // 9. 辅助
+    // ============================================================
+    function esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    document.addEventListener('gesturechange', function(e) { e.preventDefault(); });
+    document.addEventListener('gestureend', function(e) { e.preventDefault(); });
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.list-area')) return;
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    // ============================================================
+    // 10. 初始化
+    // ============================================================
+    function init() {
+        try {
+            const savedIdx = localStorage.getItem('current_lib_index');
+            if (savedIdx !== null) {
+                const idx = parseInt(savedIdx, 10);
+                if (!isNaN(idx) && idx >= 0 && idx < libraries.length) currentIndex = idx;
+            }
+        } catch (_) {}
+        buildPages();
+        slider.style.transition = 'none';
+        slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+        setTimeout(() => {
+            slider.style.transition = 'transform 0.25s ease-out';
+        }, 50);
+        setTimeout(() => { playDrawSound(0); }, 300);
+    }
+
     init();
-    // 启动一个低频率的更新循环
-    setInterval(() => {
-        if (!data.isPaused && data.currentFruit && !data.isDone) {
-            updateTimerDisplay();
-            updateProgress();
-            updateGrowArea();
-        }
-    }, 1000);
-
-    // 保存数据到localStorage的辅助函数（覆盖）
-    // 确保每次修改都保存
-    console.log('🌳 果园已加载，今天：' + today);
+})();
 </script>
 </body>
 </html>
